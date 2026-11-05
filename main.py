@@ -77,19 +77,35 @@ def add_new_equipment():
 
     equipment_list.append(new_equipment)
 
+def search_equipment():
+    search_id = input("Enter equipment ID to search: ")
+    found = False
+
+    for equipment in equipment_list:
+        if equipment["id"] == search_id:
+            print("Equipment found!")
+            print(equipment)
+            found = True
+
+    if found == False:
+        print("Equipment not found. Please check the equipment ID.")
+
 def main_menu():
     choice = ""
-    while choice != "3":
+    while choice != "4":
         print("Welcome to the Equipment Management System")
         print("1. View Equipment List")
         print("2. Add New Equipment")
-        print("3. Exit")
+        print("3. Search Equipment")
+        print("4. Exit")
         choice = input("Enter your choice: ")
         if choice == "1":
             print(equipment_list)
         elif choice == "2":
             add_new_equipment()
         elif choice == "3":
+            search_equipment()
+        elif choice == "4":
             return
         else:
             print("Invalid choice. Please try again.")
