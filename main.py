@@ -17,7 +17,15 @@ equipment_list.append(equipment)
 print(equipment_list)
 
 def add_new_equipment():
-    equipment_id = input("Enter equipment ID: ")
+    while True:
+        equipment_id = input("Enter equipment ID: ")
+        duplicate = False
+        for existing_equipment in equipment_list:
+            if existing_equipment["id"] == equipment_id:
+                 duplicate = True
+                 print("This equipment ID has already been registered. Please enter another equipment ID.")
+        if duplicate == False:
+            break
     equipment_name = input("Enter equipment name: ")
     equipment_type = input("Enter equipment type: ")
     equipment_location = input("Enter equipment location: ")
