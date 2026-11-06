@@ -90,15 +90,91 @@ def search_equipment():
     if found == False:
         print("Equipment not found. Please check the equipment ID.")
 
+
+def update_equipment_details():
+    equipment_id = input("Enter the equipment ID you want to update: ")
+    found = False
+
+    for equipment in equipment_list:
+        if equipment["id"] == equipment_id:
+            found = True
+
+            print("Equipment found!")
+            print(equipment)
+
+            print("\nWhat would you like to update?")
+            print("1. Equipment Name")
+            print("2. Equipment Type")
+            print("3. Equipment Location")
+            print("4. Temperature")
+            print("5. Vibration")
+            print("6. Operating Hours")
+
+            choice = input("Enter your choice: ")
+
+            if choice == "1":
+                equipment["name"] = input("Enter new equipment name: ")
+
+            elif choice == "2":
+                equipment["type"] = input("Enter new equipment type: ")
+
+            elif choice == "3":
+                equipment["location"] = input("Enter new equipment location: ")
+
+            elif choice in ["4", "5", "6"]:
+
+                if choice == "4":
+                    field = "temperature"
+                    field_name = "temperature"
+
+                elif choice == "5":
+                    field = "vibration"
+                    field_name = "vibration"
+
+                else:
+                    field = "operating_hours"
+                    field_name = "operating hours"
+
+                while True:
+                    new_value = input(
+                        f"Enter new equipment {field_name} (press Enter if unavailable): "
+                    )
+
+                    if new_value == "":
+                        equipment[field] = None
+                        break
+
+                    try:
+                        equipment[field] = float(new_value)
+                        break
+
+                    except ValueError:
+                        print(f"Invalid {field_name}. Please enter a number.")
+
+            else:
+                print("Invalid update choice.")
+                return
+
+            print("Equipment details updated successfully!")
+            print(equipment)
+            break
+
+    if found == False:
+        print("Equipment not found. Please check the equipment ID.")
+
 def main_menu():
     choice = ""
-    while choice != "4":
+
+    while choice != "5":
         print("Welcome to the Equipment Management System")
         print("1. View Equipment List")
         print("2. Add New Equipment")
         print("3. Search Equipment")
-        print("4. Exit")
+        print("4. Update Equipment Details")
+        print("5. Exit")
+
         choice = input("Enter your choice: ")
+
         if choice == "1":
             print(equipment_list)
         elif choice == "2":
@@ -106,6 +182,8 @@ def main_menu():
         elif choice == "3":
             search_equipment()
         elif choice == "4":
+            update_equipment_details()
+        elif choice == "5":
             return
         else:
             print("Invalid choice. Please try again.")
