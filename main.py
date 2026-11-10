@@ -68,6 +68,9 @@ def add_new_equipment():
 
     equipment_list.append(new_equipment)
 
+    with open("equipment_data.json", "w") as file:
+        json.dump(equipment_list, file, indent=4)
+
 def search_equipment():
     search_id = input("Enter equipment ID to search: ")
     found = False
@@ -147,6 +150,10 @@ def update_equipment_details():
                 return
 
             print("Equipment details updated successfully!")
+
+            with open("equipment_data.json", "w") as file:
+                json.dump(equipment_list, file, indent=4)
+                
             print(equipment)
             break
 
