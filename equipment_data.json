@@ -1,0 +1,11 @@
+[
+    {
+        "id": "EQ008",
+        "name": "Industrial Diesel Generator",
+        "type": "Generator",
+        "location": "Power House",
+        "temperature": 82,
+        "vibration": 5.3,
+        "operating_hours": 3200
+    }
+]

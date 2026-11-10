@@ -1,18 +1,9 @@
 #AI PLUGIN WAS USED TO REVIEW THE CODE BLOCKS
 
-equipment_list = []
+import json
 
-equipment = {
-    "id": "EQ001",
-    "name": "Centrifugal Pump",
-    "type": "Pump",
-    "location": "Plant Room",
-    "temperature": 65,
-    "vibration": 4.2,
-    "operating_hours": 1200
-}
-
-equipment_list.append(equipment)
+with open("equipment_data.json", "r") as file:
+    equipment_list = json.load(file)
 
 print(equipment_list)
 
