@@ -1,11 +1,20 @@
 [
     {
-        "id": "EQ008",
-        "name": "Industrial Diesel Generator",
-        "type": "Generator",
-        "location": "Power House",
-        "temperature": 82,
-        "vibration": 5.3,
-        "operating_hours": 3200
+        "id": "EQ009",
+        "name": "Industrial Water Pump",
+        "type": "Pump",
+        "location": "Cooling Water Plant",
+        "temperature": 50.0,
+        "vibration": 4.8,
+        "operating_hours": 2450.0
+    },
+    {
+        "id": "EQ010",
+        "name": "Industrial Air Compressor",
+        "type": "Compressor",
+        "location": "Compressor Room",
+        "temperature": 68.0,
+        "vibration": 3.6,
+        "operating_hours": 1860.0
     }
 ]

@@ -9,7 +9,10 @@ print(equipment_list)
 
 def add_new_equipment():
     while True:
-        equipment_id = input("Enter equipment ID: ")
+        equipment_id = input("Enter equipment ID: ").strip()
+        if equipment_id == "":
+            print("Equipment ID cannot be empty. Please try again.")
+            continue
         duplicate = False
         for existing_equipment in equipment_list:
             if existing_equipment["id"] == equipment_id:
@@ -17,9 +20,27 @@ def add_new_equipment():
                  print("This equipment ID has already been registered. Please enter another equipment ID.")
         if duplicate == False:
             break
-    equipment_name = input("Enter equipment name: ")
-    equipment_type = input("Enter equipment type: ")
-    equipment_location = input("Enter equipment location: ")
+
+    while True:
+        equipment_name = input("Enter equipment name: ").strip()
+        if equipment_name == "":
+            print("Equipment name cannot be empty. Please try again.")
+            continue
+        break
+
+    while True:
+        equipment_type = input("Enter equipment type: ").strip()
+        if equipment_type == "":
+            print("Equipment type cannot be empty. Please try again.")
+            continue
+        break
+
+    while True:
+        equipment_location = input("Enter equipment location: ").strip()
+        if equipment_location == "":
+            print("Equipment location cannot be empty. Please try again.")
+            continue
+        break
 
     while True:
         temperature = input("Enter equipment temperature (press Enter if unavailable): ")
