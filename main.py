@@ -153,8 +153,34 @@ def update_equipment_details():
 
             with open("equipment_data.json", "w") as file:
                 json.dump(equipment_list, file, indent=4)
-                
+
             print(equipment)
+            break
+
+    if found == False:
+        print("Equipment not found. Please check the equipment ID.")
+
+def delete_equipment():
+    equipment_id = input("Enter the equipment ID you want to delete: ")
+    found = False
+
+    for equipment in equipment_list:
+        if equipment["id"] == equipment_id:
+            found = True
+            print("Equipment found!")
+            print(equipment)
+
+            confirmation = input("Are you sure you want to delete this equipment? (yes/no): ")
+
+            if confirmation.strip().lower() == "yes":
+                equipment_list.remove(equipment)
+
+                with open("equipment_data.json", "w") as file:
+                    json.dump(equipment_list, file, indent=4)
+
+                print("Equipment deleted successfully!")
+            else:
+                print("Deletion canceled.")
             break
 
     if found == False:
@@ -163,13 +189,14 @@ def update_equipment_details():
 def main_menu():
     choice = ""
 
-    while choice != "5":
+    while choice != "6":
         print("Welcome to the Equipment Management System")
         print("1. View Equipment List")
         print("2. Add New Equipment")
         print("3. Search Equipment")
         print("4. Update Equipment Details")
-        print("5. Exit")
+        print("5. Delete Equipment")
+        print("6. Exit")
 
         choice = input("Enter your choice: ")
 
@@ -182,6 +209,8 @@ def main_menu():
         elif choice == "4":
             update_equipment_details()
         elif choice == "5":
+            delete_equipment()
+        elif choice == "6":
             return
         else:
             print("Invalid choice. Please try again.")
