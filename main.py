@@ -15,7 +15,7 @@ def add_new_equipment():
             continue
         duplicate = False
         for existing_equipment in equipment_list:
-            if existing_equipment["id"] == equipment_id:
+            if existing_equipment["id"].casefold() == equipment_id.casefold():
                  duplicate = True
                  print("This equipment ID has already been registered. Please enter another equipment ID.")
         if duplicate == False:
@@ -93,11 +93,11 @@ def add_new_equipment():
         json.dump(equipment_list, file, indent=4)
 
 def search_equipment():
-    search_id = input("Enter equipment ID to search: ")
+    search_id = input("Enter equipment ID to search: ").strip()
     found = False
 
     for equipment in equipment_list:
-        if equipment["id"] == search_id:
+        if equipment["id"].casefold() == search_id.casefold():
             print("Equipment found!")
             print(equipment)
             found = True
@@ -107,11 +107,11 @@ def search_equipment():
 
 
 def update_equipment_details():
-    equipment_id = input("Enter the equipment ID you want to update: ")
+    equipment_id = input("Enter the equipment ID you want to update: ").strip()
     found = False
 
     for equipment in equipment_list:
-        if equipment["id"] == equipment_id:
+        if equipment["id"].casefold() == equipment_id.casefold():
             found = True
 
             print("Equipment found!")
@@ -128,65 +128,74 @@ def update_equipment_details():
             choice = input("Enter your choice: ")
 
             if choice == "1":
-                equipment["name"] = input("Enter new equipment name: ")
+                while True:
+                    new_value = input("Enter new equipment name: ").strip().casefold()
+
+                    if new_value == "":
+                        print("Equipment name cannot be empty. Please try again.")
+                        continue
+
+                    equipment["name"] = new_value
+                    break   
 
             elif choice == "2":
-                equipment["type"] = input("Enter new equipment type: ")
+                while True:
+                    new_value = input("Enter new equipment type: ").strip().casefold()
+
+                    if new_value == "":
+                        print("Equipment type cannot be empty. Please try again.")
+                        continue
+
+                    equipment["type"] = new_value
+                    break
 
             elif choice == "3":
-                equipment["location"] = input("Enter new equipment location: ")
+                while True:
+                    new_value = input("Enter new equipment location: ").strip().casefold()
+
+                    if new_value == "":
+                        print("Equipment location cannot be empty. Please try again.")
+                        continue
+
+                    equipment["location"] = new_value
+                    break
 
             elif choice in ["4", "5", "6"]:
 
-                if choice == "4":
-                    field = "temperature"
-                    field_name = "temperature"
+                    if choice == "4":
+                        field = "temperature"
+                        field_name = "temperature"
 
-                elif choice == "5":
-                    field = "vibration"
-                    field_name = "vibration"
+                    elif choice == "5":
+                        field = "vibration"
+                        field_name = "vibration"
 
-                else:
-                    field = "operating_hours"
-                    field_name = "operating hours"
+                    else:
+                        field = "operating_hours"
+                        field_name = "operating hours"
 
-                while True:
-                    new_value = input(
-                        f"Enter new equipment {field_name} (press Enter if unavailable): "
-                    )
+                    while True:
+                        new_value = input(
+                            f"Enter new equipment {field_name} (press Enter if unavailable): "
+                        ).strip()
 
-                    if new_value == "":
-                        equipment[field] = None
-                        break
+                        if new_value == "":
+                            equipment[field] = None
+                            break
 
-                    try:
-                        equipment[field] = float(new_value)
-                        break
+                        try:
+                            equipment[field] = float(new_value)
+                            break
 
-                    except ValueError:
-                        print(f"Invalid {field_name}. Please enter a number.")
-
-            else:
-                print("Invalid update choice.")
-                return
-
-            print("Equipment details updated successfully!")
-
-            with open("equipment_data.json", "w") as file:
-                json.dump(equipment_list, file, indent=4)
-
-            print(equipment)
-            break
-
-    if found == False:
-        print("Equipment not found. Please check the equipment ID.")
+                        except ValueError:
+                            print(f"Invalid {field_name}. Please enter a number.")
 
 def delete_equipment():
-    equipment_id = input("Enter the equipment ID you want to delete: ")
+    equipment_id = input("Enter the equipment ID you want to delete: ").strip()
     found = False
 
     for equipment in equipment_list:
-        if equipment["id"] == equipment_id:
+        if equipment["id"].casefold() == equipment_id.casefold():
             found = True
             print("Equipment found!")
             print(equipment)

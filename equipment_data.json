@@ -1,7 +1,7 @@
 [
     {
         "id": "EQ009",
-        "name": "Industrial Water Pump",
+        "name": "",
         "type": "Pump",
         "location": "Cooling Water Plant",
         "temperature": 50.0,
@@ -16,5 +16,23 @@
         "temperature": 68.0,
         "vibration": 3.6,
         "operating_hours": 1860.0
+    },
+    {
+        "id": "EQ012",
+        "name": "Industrial Cooling Water Pump",
+        "type": "Pump",
+        "location": "Cooling Water Plant",
+        "temperature": 72.5,
+        "vibration": 4.2,
+        "operating_hours": 1800.0
+    },
+    {
+        "id": "EQ013",
+        "name": "Diesel Generator",
+        "type": "Generator",
+        "location": "Power House",
+        "temperature": 65.0,
+        "vibration": 3.5,
+        "operating_hours": null
     }
 ]
