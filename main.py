@@ -7,9 +7,14 @@ with open("equipment_data.json", "r") as file:
 
 print(equipment_list)
 
+with open("work_orders.json", "r") as file:
+    work_order_list = json.load(file)
+
+print(work_order_list)
+
 def add_new_equipment():
     while True:
-        equipment_id = input("Enter equipment ID: ").strip()
+        equipment_id = input("Enter equipment ID: ").strip().upper()
         if equipment_id == "":
             print("Equipment ID cannot be empty. Please try again.")
             continue
@@ -22,21 +27,21 @@ def add_new_equipment():
             break
 
     while True:
-        equipment_name = input("Enter equipment name: ").strip()
+        equipment_name = input("Enter equipment name: ").strip().title()
         if equipment_name == "":
             print("Equipment name cannot be empty. Please try again.")
             continue
         break
 
     while True:
-        equipment_type = input("Enter equipment type: ").strip()
+        equipment_type = input("Enter equipment type: ").strip().title()
         if equipment_type == "":
             print("Equipment type cannot be empty. Please try again.")
             continue
         break
 
     while True:
-        equipment_location = input("Enter equipment location: ").strip()
+        equipment_location = input("Enter equipment location: ").strip().title()
         if equipment_location == "":
             print("Equipment location cannot be empty. Please try again.")
             continue
@@ -129,7 +134,7 @@ def update_equipment_details():
 
             if choice == "1":
                 while True:
-                    new_value = input("Enter new equipment name: ").strip().casefold()
+                    new_value = input("Enter new equipment name: ").strip().title()
 
                     if new_value == "":
                         print("Equipment name cannot be empty. Please try again.")
@@ -140,7 +145,7 @@ def update_equipment_details():
 
             elif choice == "2":
                 while True:
-                    new_value = input("Enter new equipment type: ").strip().casefold()
+                    new_value = input("Enter new equipment type: ").strip().title()
 
                     if new_value == "":
                         print("Equipment type cannot be empty. Please try again.")
@@ -151,7 +156,7 @@ def update_equipment_details():
 
             elif choice == "3":
                 while True:
-                    new_value = input("Enter new equipment location: ").strip().casefold()
+                    new_value = input("Enter new equipment location: ").strip().title()
 
                     if new_value == "":
                         print("Equipment location cannot be empty. Please try again.")
@@ -189,6 +194,19 @@ def update_equipment_details():
 
                         except ValueError:
                             print(f"Invalid {field_name}. Please enter a number.")
+            
+            else:
+                print("Invalid choice. Please select an option from 1 to 6.")
+                return
+
+            with open("equipment_data.json", "w") as file:
+                json.dump(equipment_list, file, indent=4)
+
+            print("Equipment details updated successfully!")
+            return
+
+    if found == False:
+        print("Equipment not found. Please check the equipment ID.")    
 
 def delete_equipment():
     equipment_id = input("Enter the equipment ID you want to delete: ").strip()
@@ -199,6 +217,11 @@ def delete_equipment():
             found = True
             print("Equipment found!")
             print(equipment)
+
+            for work_order in work_order_list:
+                if work_order["equipment_id"].casefold() == equipment["id"].casefold():
+                    print("This equipment has an existing work order and cannot be deleted.")
+                    return
 
             confirmation = input("Are you sure you want to delete this equipment? (yes/no): ")
 
@@ -216,17 +239,215 @@ def delete_equipment():
     if found == False:
         print("Equipment not found. Please check the equipment ID.")
 
+def create_work_order():
+    while True:
+        work_order_id = input("Enter work order ID: ").strip().upper()
+        if work_order_id == "":
+            print("Work order ID cannot be empty. Please try again.")
+            continue
+        duplicate = False
+        for existing_work_order in work_order_list:
+            if existing_work_order["id"].casefold() == work_order_id.casefold():
+                 duplicate = True
+                 print("This work order ID has already been registered. Please enter another work order ID.")
+        if duplicate == False:
+            break
+    
+    while True:
+        fault_description = input("Enter fault description: ").strip()
+        if fault_description == "":
+            print("Fault description cannot be empty. Please try again.")
+            continue
+        break
+
+    while True:
+        equipment_id = input("Enter equipment ID for the work order: ").strip().upper()
+        if equipment_id == "":
+            print("Equipment ID cannot be empty. Please try again.")
+            continue
+        found = False
+        for equipment in equipment_list:
+            if equipment["id"].casefold() == equipment_id.casefold():
+                found = True
+                break
+        if found:
+            break
+        else:
+            print("Equipment ID not found. Please enter a valid equipment ID.")
+
+    while True:
+        priority = input("Enter maintenance priority (Low/Medium/High): ").strip().title()
+        if priority == "":
+            print("Maintenance priority cannot be empty. Please try again.")
+            continue
+        if priority.casefold() not in ["low", "medium", "high"]:
+            print("Invalid priority. Please enter Low, Medium, or High.")
+            continue
+        break
+
+    status = "Pending"
+
+    work_order = {
+        "id": work_order_id,
+        "fault_description": fault_description,
+        "equipment_id": equipment_id,
+        "priority": priority,
+        "status": status
+    }
+    work_order_list.append(work_order)
+
+    with open("work_orders.json", "w") as file:
+        json.dump(work_order_list, file, indent=4)
+
+def search_work_order():
+    search_id = input("Enter work order ID to search: ").strip()
+    found = False
+
+    for work_order in work_order_list:
+        if work_order["id"].casefold() == search_id.casefold():
+            print("Work order found!")
+            print(work_order)
+            found = True
+
+    if found == False:
+        print("Work order not found. Please check the work order ID.")
+
+
+def update_work_order():
+    work_order_id = input("Enter the work order ID you want to update: ").strip()
+    found = False
+
+    for work_order in work_order_list:
+        if work_order["id"].casefold() == work_order_id.casefold():
+            found = True
+
+            print("Work order found!")
+            print(work_order)
+
+            print("\nWhat would you like to update?")
+            print("1. Fault Description")
+            print("2. Equipment ID")
+            print("3. Maintenance Priority")
+            print("4. Status")
+
+            choice = input("Enter your choice: ")
+
+            if choice == "1":
+                while True:
+                    new_value = input("Enter new fault description: ").strip()
+
+                    if new_value == "":
+                        print("Fault description cannot be empty. Please try again.")
+                        continue
+
+                    work_order["fault_description"] = new_value
+                    break   
+
+            elif choice == "2":
+                while True:
+                    new_value = input("Enter new equipment ID: ").strip().upper()
+
+                    if new_value == "":
+                        print("Equipment ID cannot be empty. Please try again.")
+                        continue
+
+                    found_equipment = False
+                    for equipment in equipment_list:
+                        if equipment["id"].casefold() == new_value.casefold():
+                            found_equipment = True
+                            break
+
+                    if not found_equipment:
+                        print("Equipment ID not found. Please enter a valid equipment ID.")
+                        continue
+
+                    work_order["equipment_id"] = new_value
+                    break
+
+            elif choice == "3":
+                while True:
+                    new_value = input("Enter new maintenance priority (Low/Medium/High): ").strip().title()
+
+                    if new_value == "":
+                        print("Maintenance priority cannot be empty. Please try again.")
+                        continue
+
+                    if new_value.casefold() not in ["low", "medium", "high"]:
+                        print("Invalid priority. Please enter Low, Medium, or High.")
+                        continue
+
+                    work_order["priority"] = new_value
+                    break
+
+            elif choice == "4":
+                while True:
+                    new_value = input("Enter new status (Pending/In Progress/Completed): ").strip().title()
+
+                    if new_value == "":
+                        print("Status cannot be empty. Please try again.")
+                        continue
+
+                    if new_value.casefold() not in ["pending", "in progress", "completed"]:
+                        print("Invalid status. Please enter Pending, In Progress, or Completed.")
+                        continue
+
+                    work_order["status"] = new_value
+                    break
+            
+            else:
+                print("Invalid choice. Please try again.")
+                return
+
+            with open("work_orders.json", "w") as file:
+                json.dump(work_order_list, file, indent=4)
+            
+            print("Work order updated successfully!")
+            return
+    if found == False:
+        print("Work order not found. Please check the work order ID.")
+
+def delete_work_order():
+    work_order_id = input("Enter the work order ID you want to delete: ").strip()
+    found = False
+
+    for work_order in work_order_list:
+        if work_order["id"].casefold() == work_order_id.casefold():
+            found = True
+            print("Work order found!")
+            print(work_order)
+            
+            confirmation = input("Are you sure you want to delete this work order? (yes/no): ")
+
+            if confirmation.strip().lower() == "yes":
+                work_order_list.remove(work_order)
+
+                with open("work_orders.json", "w") as file:
+                    json.dump(work_order_list, file, indent=4)
+
+                print("Work order deleted successfully!")
+            else:
+                print("Deletion canceled.")
+            break
+
+    if found == False:
+        print("Work order not found. Please check the work order ID.")
+
 def main_menu():
     choice = ""
 
-    while choice != "6":
+    while choice != "11":
         print("Welcome to the Equipment Management System")
         print("1. View Equipment List")
         print("2. Add New Equipment")
         print("3. Search Equipment")
         print("4. Update Equipment Details")
         print("5. Delete Equipment")
-        print("6. Exit")
+        print("6. Create Work Order")
+        print("7. View Work Orders")
+        print("8. Search Work Order")
+        print("9. Update Work Order")
+        print("10. Delete Work Order")
+        print("11. Exit")
 
         choice = input("Enter your choice: ")
 
@@ -241,7 +462,18 @@ def main_menu():
         elif choice == "5":
             delete_equipment()
         elif choice == "6":
-            return
+            create_work_order()
+        elif choice == "7":
+            print(work_order_list)
+        elif choice == "8":
+            search_work_order()
+        elif choice == "9":
+            update_work_order()
+        elif choice == "10":
+            delete_work_order()
+        elif choice == "11":
+            print("Exiting the program.")
+            break
         else:
             print("Invalid choice. Please try again.")
 
