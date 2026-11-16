@@ -1,0 +1,38 @@
+[
+    {
+        "id": "MS001",
+        "equipment_id": "EQ012",
+        "maintenance_task": "Major pump overhaul",
+        "last_maintenance_date": "2026-11-01",
+        "maintenance_interval": 5,
+        "interval_unit": "Years",
+        "next_maintenance_date": "2031-11-01"
+    },
+    {
+        "id": "MS002",
+        "equipment_id": "EQ010",
+        "maintenance_task": "Air filter replacement",
+        "last_maintenance_date": "2026-10-15",
+        "maintenance_interval": 3,
+        "interval_unit": "Months",
+        "next_maintenance_date": "2027-01-15"
+    },
+    {
+        "id": "MS004",
+        "equipment_id": "EQ010",
+        "maintenance_task": "Inspect and replace compressor drive belt",
+        "last_maintenance_date": "2026-11-12",
+        "maintenance_interval": 6,
+        "interval_unit": "Months",
+        "next_maintenance_date": "2027-05-12"
+    },
+    {
+        "id": "MS005",
+        "equipment_id": "EQ012",
+        "maintenance_task": "Inspect pump bearings and check lubrication",
+        "last_maintenance_date": "2026-11-14",
+        "maintenance_interval": 30,
+        "interval_unit": "Days",
+        "next_maintenance_date": "2026-12-14"
+    }
+]
