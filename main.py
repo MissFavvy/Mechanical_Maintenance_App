@@ -872,7 +872,6 @@ def delete_maintenance_schedule():
     if not found:
         print("Maintenance schedule not found. Please check the schedule ID.")
 
-
 def add_maintenance_history():
     history_number = id_counters["last_history_id"] + 1
     history_id = f"MH{history_number:03d}"
@@ -897,17 +896,31 @@ def add_maintenance_history():
 
     while True:
         maintenance_date = input(
-            "Enter maintenance date (YYYY-MM-DD or DD-MM-YYYY): "
+            "Enter maintenance date (e.g. 19/11/2026 or 2026-11-19): "
         ).strip()
 
-        try:
-            date = datetime.strptime(maintenance_date, "%Y-%m-%d")
-        except ValueError:
+        date_formats = [
+            "%Y-%m-%d",
+            "%d-%m-%Y",
+            "%m-%d-%Y",
+            "%Y/%m/%d",
+            "%d/%m/%Y",
+            "%m/%d/%Y"
+        ]
+
+        date = None
+
+        for date_format in date_formats:
             try:
-                date = datetime.strptime(maintenance_date, "%d-%m-%Y")
+                date = datetime.strptime(maintenance_date, date_format)
+                break
+
             except ValueError:
-                print("Invalid date. Please try again.")
                 continue
+
+        if date is None:
+            print("Invalid date. Please enter a valid date.")
+            continue
 
         maintenance_date = date.strftime("%Y-%m-%d")
         break
@@ -942,12 +955,15 @@ def add_maintenance_history():
         if currency_choice == "1":
             maintenance_cost_currency = "GBP"
             break
+
         elif currency_choice == "2":
             maintenance_cost_currency = "USD"
             break
+
         elif currency_choice == "3":
             maintenance_cost_currency = "NGN"
             break
+
         else:
             print("Invalid maintenance cost currency. Please select 1, 2, or 3.")
 
@@ -1044,17 +1060,31 @@ def update_maintenance_history():
                 if choice == "1":
                     while True:
                         new_date = input(
-                            "Enter new maintenance date (YYYY-MM-DD or DD-MM-YYYY): "
+                            "Enter new maintenance date (e.g. 19/11/2026 or 2026-11-19): "
                         ).strip()
 
-                        try:
-                            date = datetime.strptime(new_date, "%Y-%m-%d")
-                        except ValueError:
+                        date_formats = [
+                            "%Y-%m-%d",
+                            "%d-%m-%Y",
+                            "%m-%d-%Y",
+                            "%Y/%m/%d",
+                            "%d/%m/%Y",
+                            "%m/%d/%Y"
+                        ]
+
+                        date = None
+
+                        for date_format in date_formats:
                             try:
-                                date = datetime.strptime(new_date, "%d-%m-%Y")
+                                date = datetime.strptime(new_date, date_format)
+                                break
+
                             except ValueError:
-                                print("Invalid date. Please try again.")
                                 continue
+
+                        if date is None:
+                            print("Invalid date. Please enter a valid date.")
+                            continue
 
                         history["maintenance_date"] = date.strftime("%Y-%m-%d")
                         break

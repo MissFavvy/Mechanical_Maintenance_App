@@ -31,5 +31,16 @@
         "fault_description": "Hydraulic oil leakage",
         "maintenance_cost_currency": "GBP",
         "maintenance_cost": null
+    },
+    {
+        "id": "MH004",
+        "work_order_id": null,
+        "equipment_id": "EQ010",
+        "maintenance_date": "2026-11-20",
+        "work_performed": "Inspected and cleaned compressor air filter",
+        "parts_replaced": "none",
+        "fault_description": "Reduced airflow caused by a dirty air filter",
+        "maintenance_cost_currency": "GBP",
+        "maintenance_cost": 35.0
     }
 ]
