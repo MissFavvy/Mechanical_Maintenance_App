@@ -627,10 +627,179 @@ def check_maintenance_status(next_maintenance_date):
     else:
         return "Upcoming"
 
+def search_maintenance_schedule():
+    search_id = input("Enter maintenance schedule ID to search: ").strip()
+    found = False
+
+    for schedule in maintenance_schedule_list:
+        if schedule["id"].casefold() == search_id.casefold():
+            print("Maintenance schedule found!")
+            print("------------------------------")
+            print("Schedule ID:", schedule["id"])
+            print("Equipment ID:", schedule["equipment_id"])
+            print("Maintenance Task:", schedule["maintenance_task"])
+            print("Last Maintenance Date:", schedule["last_maintenance_date"])
+            print("Maintenance Interval:", schedule["maintenance_interval"], schedule["interval_unit"])
+            print("Next Maintenance Date:", schedule["next_maintenance_date"])
+            print("Maintenance Status:", check_maintenance_status(schedule["next_maintenance_date"]))
+            print("------------------------------")
+            found = True
+            break
+
+    if not found:
+        print("Maintenance schedule not found. Please check the schedule ID.")
+
+
+def update_maintenance_schedule():
+    schedule_id = input("Enter maintenance schedule ID to update: ").strip()
+    found = False
+
+    for schedule in maintenance_schedule_list:
+        if schedule["id"].casefold() == schedule_id.casefold():
+            found = True
+
+            print("Maintenance schedule found!")
+            print("Schedule ID:", schedule["id"])
+            print("Equipment ID:", schedule["equipment_id"])
+            print("Maintenance Task:", schedule["maintenance_task"])
+            print("Last Maintenance Date:", schedule["last_maintenance_date"])
+            print("Maintenance Interval:", schedule["maintenance_interval"], schedule["interval_unit"])
+
+            print("\nWhat would you like to update?")
+            print("1. Maintenance Task")
+            print("2. Last Maintenance Date")
+            print("3. Maintenance Interval and Unit")
+
+            choice = input("Enter your choice: ").strip()
+
+            if choice == "1":
+                while True:
+                    new_task = input("Enter new maintenance task: ").strip()
+
+                    if new_task == "":
+                        print("Maintenance task cannot be empty.")
+                        continue
+
+                    schedule["maintenance_task"] = new_task
+                    break
+
+            elif choice == "2":
+                while True:
+                    new_date = input("Enter new last maintenance date (YYYY-MM-DD or DD-MM-YYYY): ").strip()
+
+                    try:
+                        date = datetime.strptime(new_date, "%Y-%m-%d")
+                    except ValueError:
+                        try:
+                            date = datetime.strptime(new_date, "%d-%m-%Y")
+                        except ValueError:
+                            print("Invalid date. Please try again.")
+                            continue
+
+                    schedule["last_maintenance_date"] = date.strftime("%Y-%m-%d")
+                    break
+
+            elif choice == "3":
+                while True:
+                    print("\nSelect maintenance interval unit:")
+                    print("1. Days")
+                    print("2. Months")
+                    print("3. Years")
+
+                    unit_choice = input("Enter your choice: ").strip()
+
+                    if unit_choice == "1":
+                        interval_unit = "Days"
+                        break
+                    elif unit_choice == "2":
+                        interval_unit = "Months"
+                        break
+                    elif unit_choice == "3":
+                        interval_unit = "Years"
+                        break
+                    else:
+                        print("Invalid choice. Please select 1, 2, or 3.")
+
+                while True:
+                    new_interval = input(f"Enter maintenance interval ({interval_unit}): ").strip()
+
+                    try:
+                        new_interval = int(new_interval)
+
+                        if new_interval <= 0:
+                            print("Maintenance interval must be greater than zero.")
+                            continue
+
+                        break
+                    except ValueError:
+                        print("Invalid interval. Please enter a whole number.")
+
+                schedule["maintenance_interval"] = new_interval
+                schedule["interval_unit"] = interval_unit
+
+            else:
+                print("Invalid choice. Please try again.")
+                return
+
+            last_date = datetime.strptime(schedule["last_maintenance_date"], "%Y-%m-%d")
+            interval = schedule["maintenance_interval"]
+            unit = schedule["interval_unit"]
+
+            if unit == "Days":
+                next_date = last_date + timedelta(days=interval)
+            elif unit == "Months":
+                next_date = last_date + relativedelta(months=interval)
+            elif unit == "Years":
+                next_date = last_date + relativedelta(years=interval)
+
+            schedule["next_maintenance_date"] = next_date.strftime("%Y-%m-%d")
+
+            with open("maintenance_schedule.json", "w") as file:
+                json.dump(maintenance_schedule_list, file, indent=4)
+
+            print("Maintenance schedule updated successfully!")
+            print("Next maintenance date:", schedule["next_maintenance_date"])
+            return
+
+    if not found:
+        print("Maintenance schedule not found. Please check the schedule ID.")
+
+def delete_maintenance_schedule():
+    schedule_id = input("Enter maintenance schedule ID to delete: ").strip()
+    found = False
+
+    for schedule in maintenance_schedule_list:
+        if schedule["id"].casefold() == schedule_id.casefold():
+            found = True
+
+            print("Maintenance schedule found!")
+            print("Schedule ID:", schedule["id"])
+            print("Equipment ID:", schedule["equipment_id"])
+            print("Maintenance Task:", schedule["maintenance_task"])
+            print("Next Maintenance Date:", schedule["next_maintenance_date"])
+
+            confirmation = input("Are you sure you want to delete this maintenance schedule? (yes/no): ").strip().lower()
+
+            if confirmation == "yes":
+                maintenance_schedule_list.remove(schedule)
+
+                with open("maintenance_schedule.json", "w") as file:
+                    json.dump(maintenance_schedule_list, file, indent=4)
+
+                print("Maintenance schedule deleted successfully!")
+
+            else:
+                print("Deletion canceled.")
+
+            return
+
+    if not found:
+        print("Maintenance schedule not found. Please check the schedule ID.")
+
 def main_menu():
     choice = ""
 
-    while choice != "13":
+    while choice != "16":
         print("Welcome to the Equipment Management System")
         print("1. View Equipment List")
         print("2. Add New Equipment")
@@ -644,7 +813,10 @@ def main_menu():
         print("10. Delete Work Order")
         print("11. Create Maintenance Schedule")
         print("12. View Maintenance Schedules")
-        print("13. Exit")
+        print("13. Search Maintenance Schedule")
+        print("14. Update Maintenance Schedule")
+        print("15. Delete Maintenance Schedule")
+        print("16. Exit")
 
         choice = input("Enter your choice: ")
 
@@ -673,6 +845,12 @@ def main_menu():
         elif choice == "12":
             view_maintenance_schedules()
         elif choice == "13":
+            search_maintenance_schedule()
+        elif choice == "14":
+            update_maintenance_schedule()
+        elif choice == "15":
+            delete_maintenance_schedule()
+        elif choice == "16":
             print("Exiting the program. Goodbye!")
             break
         else:
