@@ -1172,11 +1172,57 @@ def update_maintenance_history():
                 print("Maintenance history updated successfully!")
 
     print("Maintenance history not found. Please check the history ID.")
+    
+def delete_maintenance_history():
+    history_id = input(
+        "Enter maintenance history ID to delete: "
+    ).strip()
+
+    for history in maintenance_history_list:
+        if history["id"].casefold() == history_id.casefold():
+
+            print("Maintenance history found!")
+            print(history)
+
+            work_order_id = history.get("work_order_id")
+
+            if work_order_id and str(work_order_id).lower() != "null":
+                for work_order in work_order_list:
+                    if work_order["id"].casefold() == work_order_id.casefold():
+                        if work_order["status"].casefold() == "completed":
+                            print(
+                                "This maintenance history cannot be deleted "
+                                "because it is linked to a completed work order."
+                            )
+                            return
+
+            while True:
+                confirmation = input(
+                    "Are you sure you want to delete this maintenance history? (yes/no): "
+                ).strip().lower()
+
+                if confirmation == "yes":
+                    maintenance_history_list.remove(history)
+
+                    with open("maintenance_history.json", "w") as file:
+                        json.dump(maintenance_history_list, file, indent=4)
+
+                    print("Maintenance history deleted successfully!")
+                    return
+
+                elif confirmation == "no":
+                    print("Deletion canceled.")
+                    return
+
+                else:
+                    print("Invalid response. Please enter yes or no.")
+
+    print("Maintenance history not found. Please check the history ID.")
 
 def main_menu():
     choice = ""
 
-    while choice != "19":
+    while choice != "20":
         print("Welcome to the Equipment Management System")
         print("1. View Equipment List")
         print("2. Add New Equipment")
@@ -1196,7 +1242,8 @@ def main_menu():
         print("16. Add Maintenance History")
         print("17. View Maintenance History")
         print("18. Update Maintenance History")
-        print("19. Exit")
+        print("19. Delete Maintenance History")
+        print("20. Exit")
 
         choice = input("Enter your choice: ")
 
@@ -1237,6 +1284,8 @@ def main_menu():
         elif choice == "18":
             update_maintenance_history()
         elif choice == "19":
+            delete_maintenance_history()
+        elif choice == "20":
             print("Exiting the program. Goodbye!")
             break
         else:
