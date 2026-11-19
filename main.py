@@ -9,6 +9,11 @@ with open("equipment_data.json", "r") as file:
 
 print(equipment_list)
 
+with open("id_counters.json", "r") as file:
+    id_counters = json.load(file)
+
+print(id_counters)
+
 with open("work_orders.json", "r") as file:
     work_order_list = json.load(file)
 
@@ -19,22 +24,23 @@ with open("maintenance_schedule.json", "r") as file:
 
 print(maintenance_schedule_list)
 
+with open("maintenance_history.json", "r") as file:
+    maintenance_history_list = json.load(file)
+
+print(maintenance_history_list)
+
 def add_new_equipment():
-    while True:
-        equipment_id = input("Enter equipment ID: ").strip().upper()
-        if equipment_id == "":
-            print("Equipment ID cannot be empty. Please try again.")
-            continue
-        duplicate = False
-        for existing_equipment in equipment_list:
-            if existing_equipment["id"].casefold() == equipment_id.casefold():
-                 duplicate = True
-                 print("This equipment ID has already been registered. Please enter another equipment ID.")
-        if duplicate == False:
-            break
+    id_counters["last_equipment_id"] += 1
+
+    equipment_number = id_counters["last_equipment_id"]
+
+    equipment_id = f"EQ{equipment_number:03d}"
+
+    print("Generated Equipment ID:", equipment_id)
 
     while True:
         equipment_name = input("Enter equipment name: ").strip().title()
+
         if equipment_name == "":
             print("Equipment name cannot be empty. Please try again.")
             continue
@@ -103,6 +109,9 @@ def add_new_equipment():
 
     with open("equipment_data.json", "w") as file:
         json.dump(equipment_list, file, indent=4)
+
+    with open("id_counters.json", "w") as file:
+        json.dump(id_counters, file, indent=4)
 
 def search_equipment():
     search_id = input("Enter equipment ID to search: ").strip()
@@ -267,18 +276,13 @@ def delete_equipment():
         print("Equipment not found. Please check the equipment ID.")
 
 def create_work_order():
-    while True:
-        work_order_id = input("Enter work order ID: ").strip().upper()
-        if work_order_id == "":
-            print("Work order ID cannot be empty. Please try again.")
-            continue
-        duplicate = False
-        for existing_work_order in work_order_list:
-            if existing_work_order["id"].casefold() == work_order_id.casefold():
-                 duplicate = True
-                 print("This work order ID has already been registered. Please enter another work order ID.")
-        if duplicate == False:
-            break
+    id_counters["last_work_order_id"] += 1
+
+    work_order_number = id_counters["last_work_order_id"]
+
+    work_order_id = f"WO{work_order_number:03d}"
+
+    print("Generated Work Order ID:", work_order_id)
     
     while True:
         fault_description = input("Enter fault description: ").strip()
@@ -321,10 +325,14 @@ def create_work_order():
         "priority": priority,
         "status": status
     }
+    
     work_order_list.append(work_order)
 
     with open("work_orders.json", "w") as file:
         json.dump(work_order_list, file, indent=4)
+
+    with open("id_counters.json", "w") as file:
+        json.dump(id_counters, file, indent=4)
 
 def search_work_order():
     search_id = input("Enter work order ID to search: ").strip()
@@ -339,6 +347,41 @@ def search_work_order():
     if found == False:
         print("Work order not found. Please check the work order ID.")
 
+
+def create_automatic_maintenance_history(work_order):
+    for history in maintenance_history_list:
+        if (history.get("work_order_id") or "").casefold() == work_order["id"].casefold():
+            print("Maintenance history already exists for this work order.")
+            return
+
+    id_counters["last_history_id"] += 1
+
+    history_number = id_counters["last_history_id"]
+
+    history_id = f"MH{history_number:03d}"
+
+    maintenance_record = {
+        "id": history_id,
+        "work_order_id": work_order["id"],
+        "equipment_id": work_order["equipment_id"].upper(),
+        "maintenance_date": datetime.today().strftime("%Y-%m-%d"),
+        "work_performed": "",
+        "parts_replaced": "",
+        "fault_description": work_order["fault_description"],
+        "maintenance_cost_currency": None,
+        "maintenance_cost": None
+    }
+
+    maintenance_history_list.append(maintenance_record)
+
+    with open("maintenance_history.json", "w") as file:
+        json.dump(maintenance_history_list, file, indent=4)
+
+    with open("id_counters.json", "w") as file:
+        json.dump(id_counters, file, indent=4)
+
+    print("Maintenance history automatically created!")
+    print("History ID:", history_id)
 
 def update_work_order():
     work_order_id = input("Enter the work order ID you want to update: ").strip()
@@ -419,6 +462,8 @@ def update_work_order():
                         continue
 
                     work_order["status"] = new_value
+                    if new_value.casefold() == "completed":
+                        create_automatic_maintenance_history(work_order)
                     break
             
             else:
@@ -461,23 +506,13 @@ def delete_work_order():
 
 
 def create_maintenance_schedule():
-    while True:
-        schedule_id = input("Enter maintenance schedule ID: ").strip().upper()
+    id_counters["last_schedule_id"] += 1
 
-        if schedule_id == "":
-            print("Maintenance schedule ID cannot be empty. Please try again.")
-            continue
+    schedule_number = id_counters["last_schedule_id"]
 
-        duplicate = False
+    schedule_id = f"MS{schedule_number:03d}"
 
-        for schedule in maintenance_schedule_list:
-            if schedule["id"].casefold() == schedule_id.casefold():
-                duplicate = True
-                print("This maintenance schedule ID already exists. Please enter another ID.")
-                break
-
-        if not duplicate:
-            break
+    print("Generated Maintenance Schedule ID:", schedule_id)
 
     while True:
         equipment_id = input("Enter equipment ID for maintenance: ").strip().upper()
@@ -592,6 +627,9 @@ def create_maintenance_schedule():
 
     with open("maintenance_schedule.json", "w") as file:
         json.dump(maintenance_schedule_list, file, indent=4)
+
+    with open("id_counters.json", "w") as file:
+        json.dump(id_counters, file, indent=4)
 
     print("Maintenance schedule created successfully!")
     print("Next maintenance date:", next_maintenance_date)
@@ -796,10 +834,281 @@ def delete_maintenance_schedule():
     if not found:
         print("Maintenance schedule not found. Please check the schedule ID.")
 
+
+def add_maintenance_history():
+    history_number = id_counters["last_history_id"] + 1
+    history_id = f"MH{history_number:03d}"
+
+    print("Generated Maintenance History ID:", history_id)
+
+    while True:
+        equipment_id = input("Enter equipment ID: ").strip().upper()
+
+        equipment_found = False
+
+        for equipment in equipment_list:
+            if equipment["id"].casefold() == equipment_id.casefold():
+                equipment_found = True
+                print("Equipment Name:", equipment["name"])
+                break
+
+        if equipment_found:
+            break
+
+        print("Equipment ID not found. Please enter a valid equipment ID.")
+
+    while True:
+        maintenance_date = input(
+            "Enter maintenance date (YYYY-MM-DD or DD-MM-YYYY): "
+        ).strip()
+
+        try:
+            date = datetime.strptime(maintenance_date, "%Y-%m-%d")
+        except ValueError:
+            try:
+                date = datetime.strptime(maintenance_date, "%d-%m-%Y")
+            except ValueError:
+                print("Invalid date. Please try again.")
+                continue
+
+        maintenance_date = date.strftime("%Y-%m-%d")
+        break
+
+    while True:
+        work_performed = input(
+            "Enter description of work performed: "
+        ).strip()
+
+        if work_performed == "":
+            print("Work description cannot be empty.")
+            continue
+
+        break
+
+    parts_replaced = input(
+        "Enter parts replaced (press Enter if none): "
+    ).strip()
+
+    fault_description = input(
+        "Enter fault description (press Enter if none): "
+    ).strip()
+
+    while True:
+        print("\nSelect maintenance cost currency:")
+        print("1. GBP (£)")
+        print("2. USD ($)")
+        print("3. NGN (₦)")
+
+        currency_choice = input("Enter your choice: ").strip()
+
+        if currency_choice == "1":
+            maintenance_cost_currency = "GBP"
+            break
+        elif currency_choice == "2":
+            maintenance_cost_currency = "USD"
+            break
+        elif currency_choice == "3":
+            maintenance_cost_currency = "NGN"
+            break
+        else:
+            print("Invalid maintenance cost currency. Please select 1, 2, or 3.")
+
+    while True:
+        maintenance_cost = input(
+            f"Enter maintenance cost ({maintenance_cost_currency}): "
+        ).strip()
+
+        try:
+            maintenance_cost = float(maintenance_cost)
+
+            if maintenance_cost < 0:
+                print("Maintenance cost cannot be negative.")
+                continue
+
+            break
+
+        except ValueError:
+            print("Invalid cost. Please enter a number.")
+
+    maintenance_record = {
+        "id": history_id,
+        "work_order_id": None,
+        "equipment_id": equipment_id,
+        "maintenance_date": maintenance_date,
+        "work_performed": work_performed,
+        "parts_replaced": parts_replaced,
+        "fault_description": fault_description,
+        "maintenance_cost_currency": maintenance_cost_currency,
+        "maintenance_cost": maintenance_cost
+    }
+
+    maintenance_history_list.append(maintenance_record)
+
+    with open("maintenance_history.json", "w") as file:
+        json.dump(maintenance_history_list, file, indent=4)
+
+    id_counters["last_history_id"] = history_number
+
+    with open("id_counters.json", "w") as file:
+        json.dump(id_counters, file, indent=4)
+
+    print("Maintenance history recorded successfully!")
+
+def view_maintenance_history():
+    if not maintenance_history_list:
+        print("No maintenance history records found.")
+        return
+
+    print("\nMaintenance History Records:")
+
+    for history in maintenance_history_list:
+        print("------------------------------")
+        print("History ID:", history["id"])
+        print("Work Order ID:", history.get("work_order_id", "N/A"))
+        print("Equipment ID:", history["equipment_id"])
+        print("Maintenance Date:", history["maintenance_date"])
+        print("Fault Description:", history.get("fault_description", "N/A"))
+        print("Work Performed:", history["work_performed"])
+        print("Parts Replaced:", history["parts_replaced"])
+
+        currency = history.get("maintenance_cost_currency")
+        cost = history.get("maintenance_cost")
+
+        if cost is None:
+            print("Maintenance Cost: Not recorded")
+        elif currency is None:
+            print("Maintenance Cost:", cost, "(currency not recorded)")
+        else:
+            print("Maintenance Cost:", cost, currency)
+
+        print("------------------------------")
+
+def update_maintenance_history():
+    history_id = input("Enter maintenance history ID to update: ").strip()
+
+    for history in maintenance_history_list:
+        if history["id"].casefold() == history_id.casefold():
+            print("Maintenance history found!")
+            print(history)
+
+            while True:
+                print("\nWhat would you like to update?")
+                print("1. Maintenance Date")
+                print("2. Fault Description")
+                print("3. Work Performed")
+                print("4. Parts Replaced")
+                print("5. Maintenance Cost Currency")
+                print("6. Maintenance Cost")
+                print("7. Finish Updating")
+
+                choice = input("Enter your choice: ").strip()
+
+                if choice == "1":
+                    while True:
+                        new_date = input(
+                            "Enter new maintenance date (YYYY-MM-DD or DD-MM-YYYY): "
+                        ).strip()
+
+                        try:
+                            date = datetime.strptime(new_date, "%Y-%m-%d")
+                        except ValueError:
+                            try:
+                                date = datetime.strptime(new_date, "%d-%m-%Y")
+                            except ValueError:
+                                print("Invalid date. Please try again.")
+                                continue
+
+                        history["maintenance_date"] = date.strftime("%Y-%m-%d")
+                        break
+
+                elif choice == "2":
+                    new_value = input(
+                        "Enter fault description (press Enter if none): "
+                    ).strip()
+                    history["fault_description"] = new_value
+
+                elif choice == "3":
+                    while True:
+                        new_value = input("Enter work performed: ").strip()
+
+                        if new_value == "":
+                            print("Work description cannot be empty.")
+                            continue
+
+                        history["work_performed"] = new_value
+                        break
+
+                elif choice == "4":
+                    new_value = input(
+                        "Enter parts replaced (press Enter if none): "
+                    ).strip()
+                    history["parts_replaced"] = new_value
+
+                elif choice == "5":
+                    while True:
+                        print("\nSelect maintenance cost currency:")
+                        print("1. GBP (£)")
+                        print("2. USD ($)")
+                        print("3. NGN (₦)")
+
+                        currency_choice = input("Enter your choice: ").strip()
+
+                        if currency_choice == "1":
+                            history["maintenance_cost_currency"] = "GBP"
+                            break
+                        elif currency_choice == "2":
+                            history["maintenance_cost_currency"] = "USD"
+                            break
+                        elif currency_choice == "3":
+                            history["maintenance_cost_currency"] = "NGN"
+                            break
+                        else:
+                            print("Invalid currency. Please select 1, 2, or 3.")
+
+                elif choice == "6":
+                    currency = history.get("maintenance_cost_currency")
+
+                    if currency is None:
+                        print("Please select a maintenance cost currency first.")
+                        continue
+
+                    while True:
+                        new_cost = input(
+                            f"Enter new maintenance cost ({currency}): "
+                        ).strip()
+
+                        try:
+                            new_cost = float(new_cost)
+
+                            if new_cost < 0:
+                                print("Maintenance cost cannot be negative.")
+                                continue
+
+                            history["maintenance_cost"] = new_cost
+                            break
+
+                        except ValueError:
+                            print("Invalid cost. Please enter a number.")
+
+                elif choice == "7":
+                    print("Finished updating maintenance history.")
+                    return
+
+                else:
+                    print("Invalid choice. Please select an option from 1 to 7.")
+                    continue
+
+                with open("maintenance_history.json", "w") as file:
+                    json.dump(maintenance_history_list, file, indent=4)
+
+                print("Maintenance history updated successfully!")
+
+    print("Maintenance history not found. Please check the history ID.")
+
 def main_menu():
     choice = ""
 
-    while choice != "16":
+    while choice != "19":
         print("Welcome to the Equipment Management System")
         print("1. View Equipment List")
         print("2. Add New Equipment")
@@ -816,7 +1125,10 @@ def main_menu():
         print("13. Search Maintenance Schedule")
         print("14. Update Maintenance Schedule")
         print("15. Delete Maintenance Schedule")
-        print("16. Exit")
+        print("16. Add Maintenance History")
+        print("17. View Maintenance History")
+        print("18. Update Maintenance History")
+        print("19. Exit")
 
         choice = input("Enter your choice: ")
 
@@ -851,6 +1163,12 @@ def main_menu():
         elif choice == "15":
             delete_maintenance_schedule()
         elif choice == "16":
+            add_maintenance_history()
+        elif choice == "17":
+            view_maintenance_history()
+        elif choice == "18":
+            update_maintenance_history()
+        elif choice == "19":
             print("Exiting the program. Goodbye!")
             break
         else:

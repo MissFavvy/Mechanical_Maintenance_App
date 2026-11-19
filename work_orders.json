@@ -1,9 +1,16 @@
 [
     {
         "id": "WO001",
-        "fault_description": "Excessive vibration during operation",
-        "equipment_id": "Eq012",
-        "priority": "high",
-        "status": "In progress"
+        "fault_description": "Leakage detected around pump mechanical seal",
+        "equipment_id": "EQ012",
+        "priority": "High",
+        "status": "Pending"
+    },
+    {
+        "id": "WO002",
+        "fault_description": "Hydraulic oil leakage",
+        "equipment_id": "EQ014",
+        "priority": "Medium",
+        "status": "Completed"
     }
 ]

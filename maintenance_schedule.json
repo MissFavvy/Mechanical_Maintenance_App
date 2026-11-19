@@ -1,14 +1,5 @@
 [
     {
-        "id": "MS001",
-        "equipment_id": "EQ012",
-        "maintenance_task": "Major pump overhaul",
-        "last_maintenance_date": "2026-11-01",
-        "maintenance_interval": 5,
-        "interval_unit": "Years",
-        "next_maintenance_date": "2031-11-01"
-    },
-    {
         "id": "MS002",
         "equipment_id": "EQ010",
         "maintenance_task": "Air filter replacement",
@@ -25,5 +16,23 @@
         "maintenance_interval": 6,
         "interval_unit": "Months",
         "next_maintenance_date": "2027-05-12"
+    },
+    {
+        "id": "MS005",
+        "equipment_id": "EQ012",
+        "maintenance_task": "Inspect and lubricate pump bearings",
+        "last_maintenance_date": "2026-11-19",
+        "maintenance_interval": 3,
+        "interval_unit": "Months",
+        "next_maintenance_date": "2027-02-19"
+    },
+    {
+        "id": "MS006",
+        "equipment_id": "EQ014",
+        "maintenance_task": "Inspect hydraulic pump seals",
+        "last_maintenance_date": "2026-11-19",
+        "maintenance_interval": 3,
+        "interval_unit": "Months",
+        "next_maintenance_date": "2027-02-19"
     }
 ]

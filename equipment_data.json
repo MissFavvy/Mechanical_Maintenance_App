@@ -34,5 +34,23 @@
         "temperature": 72.5,
         "vibration": 4.2,
         "operating_hours": 1800.0
+    },
+    {
+        "id": "EQ014",
+        "name": "Hydraulic Pump",
+        "type": "Pump",
+        "location": "Maintenance Workshop",
+        "temperature": 65.0,
+        "vibration": 3.5,
+        "operating_hours": 1200.0
+    },
+    {
+        "id": "EQ015",
+        "name": "Air Compressor",
+        "type": "Compressor",
+        "location": "Workshop",
+        "temperature": 60.0,
+        "vibration": 3.2,
+        "operating_hours": 900.0
     }
 ]

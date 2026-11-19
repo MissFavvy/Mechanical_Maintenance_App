@@ -1,0 +1,35 @@
+[
+    {
+        "id": "MH001",
+        "work_order_id": "null",
+        "equipment_id": "Eq012",
+        "maintenance_date": "2026-11-19",
+        "work_performed": "",
+        "parts_replaced": "",
+        "maintenance_cost": null,
+        "maintenance_cost_currency": null,
+        "fault_description": "Excessive vibration during operation"
+    },
+    {
+        "id": "MH002",
+        "work_order_id": "null",
+        "equipment_id": "EQ014",
+        "maintenance_date": "2026-11-19",
+        "work_performed": "Inspected hydraulic pump seals",
+        "parts_replaced": "none",
+        "maintenance_cost": 50.0,
+        "maintenance_cost_currency": "GBP",
+        "fault_description": "Hydraulic oil leakage detected around the pump seals, indicating possible seal wear or deterioration"
+    },
+    {
+        "id": "MH003",
+        "work_order_id": "WO002",
+        "equipment_id": "EQ014",
+        "maintenance_date": "2026-11-20",
+        "work_performed": "Inspected hydraulic pump and repaired oil leakage",
+        "parts_replaced": "Hydraulic seal",
+        "fault_description": "Hydraulic oil leakage",
+        "maintenance_cost_currency": "GBP",
+        "maintenance_cost": null
+    }
+]
