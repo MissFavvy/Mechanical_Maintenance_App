@@ -504,7 +504,6 @@ def delete_work_order():
     if found == False:
         print("Work order not found. Please check the work order ID.")
 
-
 def create_maintenance_schedule():
     id_counters["last_schedule_id"] += 1
 
@@ -546,18 +545,32 @@ def create_maintenance_schedule():
         break
 
     while True:
-        last_maintenance_date = input("Enter last maintenance date (YYYY-MM-DD or DD-MM-YYYY): ").strip()
+        last_maintenance_date = input(
+            "Enter last maintenance date (e.g. 19/11/2026 or 2026-11-19): "
+        ).strip()
 
-        try:
-            date = datetime.strptime(last_maintenance_date, "%Y-%m-%d")
+        date_formats = [
+            "%Y-%m-%d",
+            "%d-%m-%Y",
+            "%m-%d-%Y",
+            "%Y/%m/%d",
+            "%d/%m/%Y",
+            "%m/%d/%Y"
+        ]
 
-        except ValueError:
+        date = None
+
+        for date_format in date_formats:
             try:
-                date = datetime.strptime(last_maintenance_date, "%d-%m-%Y")
+                date = datetime.strptime(last_maintenance_date, date_format)
+                break
 
             except ValueError:
-                print("Invalid date. Please use YYYY-MM-DD or DD-MM-YYYY.")
                 continue
+
+        if date is None:
+            print("Invalid date. Please enter a valid date.")
+            continue
 
         last_maintenance_date = date.strftime("%Y-%m-%d")
         break
@@ -586,7 +599,9 @@ def create_maintenance_schedule():
             print("Invalid choice. Please select 1, 2, or 3.")
 
     while True:
-        maintenance_interval = input(f"Enter maintenance interval ({interval_unit}): ").strip()
+        maintenance_interval = input(
+            f"Enter maintenance interval ({interval_unit}): "
+        ).strip()
 
         try:
             maintenance_interval = int(maintenance_interval)
