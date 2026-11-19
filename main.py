@@ -702,7 +702,6 @@ def search_maintenance_schedule():
     if not found:
         print("Maintenance schedule not found. Please check the schedule ID.")
 
-
 def update_maintenance_schedule():
     schedule_id = input("Enter maintenance schedule ID to update: ").strip()
     found = False
@@ -738,16 +737,32 @@ def update_maintenance_schedule():
 
             elif choice == "2":
                 while True:
-                    new_date = input("Enter new last maintenance date (YYYY-MM-DD or DD-MM-YYYY): ").strip()
+                    new_date = input(
+                        "Enter new last maintenance date (e.g. 19/11/2026 or 2026-11-19): "
+                    ).strip()
 
-                    try:
-                        date = datetime.strptime(new_date, "%Y-%m-%d")
-                    except ValueError:
+                    date_formats = [
+                        "%Y-%m-%d",
+                        "%d-%m-%Y",
+                        "%m-%d-%Y",
+                        "%Y/%m/%d",
+                        "%d/%m/%Y",
+                        "%m/%d/%Y"
+                    ]
+
+                    date = None
+
+                    for date_format in date_formats:
                         try:
-                            date = datetime.strptime(new_date, "%d-%m-%Y")
+                            date = datetime.strptime(new_date, date_format)
+                            break
+
                         except ValueError:
-                            print("Invalid date. Please try again.")
                             continue
+
+                    if date is None:
+                        print("Invalid date. Please enter a valid date.")
+                        continue
 
                     schedule["last_maintenance_date"] = date.strftime("%Y-%m-%d")
                     break
@@ -774,7 +789,9 @@ def update_maintenance_schedule():
                         print("Invalid choice. Please select 1, 2, or 3.")
 
                 while True:
-                    new_interval = input(f"Enter maintenance interval ({interval_unit}): ").strip()
+                    new_interval = input(
+                        f"Enter maintenance interval ({interval_unit}): "
+                    ).strip()
 
                     try:
                         new_interval = int(new_interval)
@@ -784,6 +801,7 @@ def update_maintenance_schedule():
                             continue
 
                         break
+
                     except ValueError:
                         print("Invalid interval. Please enter a whole number.")
 
@@ -794,14 +812,19 @@ def update_maintenance_schedule():
                 print("Invalid choice. Please try again.")
                 return
 
-            last_date = datetime.strptime(schedule["last_maintenance_date"], "%Y-%m-%d")
+            last_date = datetime.strptime(
+                schedule["last_maintenance_date"], "%Y-%m-%d"
+            )
+
             interval = schedule["maintenance_interval"]
             unit = schedule["interval_unit"]
 
             if unit == "Days":
                 next_date = last_date + timedelta(days=interval)
+
             elif unit == "Months":
                 next_date = last_date + relativedelta(months=interval)
+
             elif unit == "Years":
                 next_date = last_date + relativedelta(years=interval)
 

@@ -39,9 +39,9 @@
         "id": "MS007",
         "equipment_id": "EQ012",
         "maintenance_task": "Inspect pump mechanical seal",
-        "last_maintenance_date": "2026-11-19",
+        "last_maintenance_date": "2026-11-20",
         "maintenance_interval": 3,
         "interval_unit": "Months",
-        "next_maintenance_date": "2027-02-19"
+        "next_maintenance_date": "2027-02-20"
     }
 ]
