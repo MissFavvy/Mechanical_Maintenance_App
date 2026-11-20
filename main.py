@@ -486,6 +486,11 @@ def delete_work_order():
         if work_order["id"].casefold() == work_order_id.casefold():
             found = True
             print("Work order found!")
+            if work_order["status"] == "Completed":
+                for history in maintenance_history_list:
+                    if history.get("work_order_id") == work_order["id"]:
+                        print("Cannot delete this work order because it has linked maintenance history.")
+                        return
             print(work_order)
             
             confirmation = input("Are you sure you want to delete this work order? (yes/no): ")
