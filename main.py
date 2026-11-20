@@ -236,6 +236,7 @@ def delete_equipment():
 
             has_work_order = False
             has_maintenance_schedule = False
+            has_maintenance_history = False
 
             for work_order in work_order_list:
                 if work_order["equipment_id"].casefold() == equipment["id"].casefold():
@@ -247,7 +248,12 @@ def delete_equipment():
                     has_maintenance_schedule = True
                     break
 
-            if has_work_order or has_maintenance_schedule:
+            for history in maintenance_history_list:
+                if history["equipment_id"].casefold() == equipment["id"].casefold():
+                    has_maintenance_history = True
+                    break
+
+            if has_work_order or has_maintenance_schedule or has_maintenance_history:
                 print("This equipment cannot be deleted because:")
 
                 if has_work_order:
@@ -255,6 +261,9 @@ def delete_equipment():
 
                 if has_maintenance_schedule:
                     print("- It has an existing maintenance schedule.")
+
+                if has_maintenance_history:
+                    print("- It has an existing maintenance history.")
 
                 return
 
@@ -393,6 +402,17 @@ def update_work_order():
 
             print("Work order found!")
             print(work_order)
+            
+            has_maintenance_history = False
+            for history in maintenance_history_list:
+                linked_id = history.get("work_order_id")
+                if isinstance(linked_id, str) and linked_id.casefold() == work_order["id"].casefold():
+                    has_maintenance_history = True
+                    break   
+                    
+            if work_order["status"] == "Completed" and has_maintenance_history:
+                print("This completed work order has linked maintenance history and cannot be updated.")
+                return
 
             print("\nWhat would you like to update?")
             print("1. Fault Description")
