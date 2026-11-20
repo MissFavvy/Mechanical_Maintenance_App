@@ -409,7 +409,7 @@ def update_work_order():
                 if isinstance(linked_id, str) and linked_id.casefold() == work_order["id"].casefold():
                     has_maintenance_history = True
                     break   
-                    
+
             if work_order["status"] == "Completed" and has_maintenance_history:
                 print("This completed work order has linked maintenance history and cannot be updated.")
                 return
@@ -506,11 +506,13 @@ def delete_work_order():
         if work_order["id"].casefold() == work_order_id.casefold():
             found = True
             print("Work order found!")
-            if work_order["status"] == "Completed":
-                for history in maintenance_history_list:
-                    if history.get("work_order_id") == work_order["id"]:
-                        print("Cannot delete this work order because it has linked maintenance history.")
-                        return
+
+            for history in maintenance_history_list:
+                linked_id = history.get("work_order_id")
+                if isinstance(linked_id, str) and linked_id.casefold() == work_order["id"].casefold():
+                    print("Cannot delete this work order because it has linked maintenance history.")
+                    return
+
             print(work_order)
             
             confirmation = input("Are you sure you want to delete this work order? (yes/no): ")
