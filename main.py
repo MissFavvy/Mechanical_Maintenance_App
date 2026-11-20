@@ -7,27 +7,17 @@ from dateutil.relativedelta import relativedelta
 with open("equipment_data.json", "r") as file:
     equipment_list = json.load(file)
 
-print(equipment_list)
-
 with open("id_counters.json", "r") as file:
     id_counters = json.load(file)
-
-print(id_counters)
 
 with open("work_orders.json", "r") as file:
     work_order_list = json.load(file)
 
-print(work_order_list)
-
 with open("maintenance_schedule.json", "r") as file:
     maintenance_schedule_list = json.load(file)
 
-print(maintenance_schedule_list)
-
 with open("maintenance_history.json", "r") as file:
     maintenance_history_list = json.load(file)
-
-print(maintenance_history_list)
 
 def add_new_equipment():
     id_counters["last_equipment_id"] += 1
