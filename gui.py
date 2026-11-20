@@ -1,4 +1,18 @@
 import tkinter as tk
+import json
+from tkinter import ttk
+
+with open("equipment_data.json", "r") as file:
+    equipment_list = json.load(file)
+
+with open("work_orders.json", "r") as file:
+    work_order_list = json.load(file)
+
+with open("maintenance_schedule.json", "r") as file:
+    maintenance_schedule_list = json.load(file)
+
+with open("maintenance_history.json", "r") as file:
+    maintenance_history_list = json.load(file)
 
 root = tk.Tk()
 root.title("Mechanical Maintenance Management System")
@@ -9,20 +23,71 @@ def open_equipment_window():
     equipment_window.title("Equipment Management")
     equipment_window.geometry("800x500")
 
+    equipment_heading = tk.Label(
+        equipment_window,
+        text="Equipment Records",
+        font=("Arial", 16, "bold")
+    )
+    equipment_heading.pack(pady=20)
+  
+    columns = ("ID", "Name", "Type", "Location", "Temperature", "Vibration", "Operating Hours")
+   
+    equipment_table = ttk.Treeview(
+        equipment_window,
+        columns=columns,
+        show="headings"
+    )
+    for col in columns:
+        equipment_table.heading(col, text=col)
+
+    for equipment in equipment_list:
+        equipment_table.insert("", tk.END, values=(
+            equipment["id"],
+            equipment["name"],
+            equipment["type"],
+            equipment["location"],
+            equipment["temperature"],
+            equipment["vibration"],
+            equipment["operating_hours"]
+        ))
+
+    equipment_table.pack(pady=20, fill=tk.BOTH, expand=True)
+
 def open_work_order_window():
     work_order_window = tk.Toplevel(root)
     work_order_window.title("Work Orders")
     work_order_window.geometry("800x500")
+
+    work_order_heading = tk.Label(
+        work_order_window,
+        text="Work Orders",
+        font=("Arial", 16, "bold")
+    )
+    work_order_heading.pack(pady=20)
 
 def open_schedule_window():
     schedule_window = tk.Toplevel(root)
     schedule_window.title("Maintenance Scheduling")
     schedule_window.geometry("800x500")
 
+    schedule_heading = tk.Label(
+        schedule_window,
+        text="Maintenance Schedule",
+        font=("Arial", 16, "bold")
+    )
+    schedule_heading.pack(pady=20)
+
 def open_history_window():
     history_window = tk.Toplevel(root)
     history_window.title("Maintenance History")
     history_window.geometry("800x500")
+
+    history_heading = tk.Label(
+        history_window,
+        text="Maintenance History",
+        font=("Arial", 16, "bold")
+    )
+    history_heading.pack(pady=20)
 
 heading = tk.Label(root, text="Mechanical Maintenance Management System", font=("Arial", 20, "bold"))
 heading.pack(pady=20)
