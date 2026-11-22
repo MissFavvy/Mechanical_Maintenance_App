@@ -2,15 +2,23 @@ import tkinter as tk
 import json
 from tkinter import ttk, messagebox
 
+# Load the equipment records
 with open("equipment_data.json", "r") as file:
     equipment_list = json.load(file)
 
+# Load the ID counters
+with open("id_counters.json", "r") as file:
+    id_counters = json.load(file)
+
+# Load the work orders
 with open("work_orders.json", "r") as file:
     work_order_list = json.load(file)
 
+# Load the maintenance schedules
 with open("maintenance_schedule.json", "r") as file:
     maintenance_schedule_list = json.load(file)
 
+# Load the maintenance history
 with open("maintenance_history.json", "r") as file:
     maintenance_history_list = json.load(file)
 
@@ -92,33 +100,114 @@ def open_equipment_window():
     operating_hours_entry.grid(row=3, column=2, padx=10, pady=5)
 
     def save_equipment():
-        equipment_name = name_entry.get().strip()
-        equipment_type = type_entry.get().strip()
-        equipment_location = location_entry.get().strip()
+        equipment_name = name_entry.get().strip().title()
+        equipment_type = type_entry.get().strip().title()
+        equipment_location = location_entry.get().strip().title()
+
         temperature = temperature_entry.get().strip()
         vibration = vibration_entry.get().strip()
         operating_hours = operating_hours_entry.get().strip()
-        
-        if equipment_name == "" or equipment_type == "" or equipment_location == "":
+
+        # Check that the required fields are filled in
+        if not equipment_name or not equipment_type or not equipment_location:
             messagebox.showwarning(
                 "Missing Information",
                 "Equipment Name, Type, and Location are required."
             )
             return
 
-        print(equipment_name)
-        print(equipment_type)
-        print(equipment_location)
-        print(temperature)
-        print(vibration)
-        print(operating_hours)
+        # Check the readings and allow empty fields
+        try:
+            temperature = float(temperature) if temperature else None
+            vibration = float(vibration) if vibration else None
+            operating_hours = float(operating_hours) if operating_hours else None
+
+        except ValueError:
+            messagebox.showwarning(
+                "Invalid Input",
+                "Temperature, Vibration, and Operating Hours must be numbers."
+            )
+            return
+
+        # Get the latest equipment ID
+        with open("id_counters.json", "r") as file:
+            counters = json.load(file)
+
+        next_number = counters["last_equipment_id"] + 1
+        equipment_id = f"EQ{next_number:03d}"
+
+        # Check that the ID is not already in use
+        with open("equipment_data.json", "r") as file:
+            saved_equipment = json.load(file)
+
+        existing_ids = {equipment["id"] for equipment in saved_equipment}
+
+        while equipment_id in existing_ids:
+            next_number += 1
+            equipment_id = f"EQ{next_number:03d}"
+
+        # Put the equipment details together
+        new_equipment = {
+            "id": equipment_id,
+            "name": equipment_name,
+            "type": equipment_type,
+            "location": equipment_location,
+            "temperature": temperature,
+            "vibration": vibration,
+            "operating_hours": operating_hours
+        }
+
+        # Add the new equipment to the JSON file
+        saved_equipment.append(new_equipment)
+
+        with open("equipment_data.json", "w") as file:
+            json.dump(saved_equipment, file, indent=4)
+
+        # Save the latest equipment ID
+        counters["last_equipment_id"] = next_number
+
+        with open("id_counters.json", "w") as file:
+            json.dump(counters, file, indent=4)
+
+        # Keep the equipment list up to date
+        equipment_list.clear()
+        equipment_list.extend(saved_equipment)
+
+        # Add the equipment to the table
+        equipment_table.insert("", tk.END, values=(
+            equipment_id,
+            equipment_name,
+            equipment_type,
+            equipment_location,
+            temperature,
+            vibration,
+            operating_hours
+        ))
+
+        # Show a message when the equipment is saved
+        messagebox.showinfo(
+            "Success",
+            f"Equipment {equipment_id} registered successfully."
+        )
+
+        # Clear the fields for the next entry
+        for entry in (
+            name_entry,
+            type_entry,
+            location_entry,
+            temperature_entry,
+            vibration_entry,
+            operating_hours_entry
+        ):
+            entry.delete(0, tk.END)
+
+    # Save the equipment details when clicked
     save_equipment_button = tk.Button(
         add_equipment_frame,
         text="Save Equipment",
         font=("Arial", 12),
         command=save_equipment
     )
-
     save_equipment_button.grid(row=4, column=1, pady=15)
 
     def show_add_equipment_form():
