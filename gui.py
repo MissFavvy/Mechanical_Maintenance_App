@@ -4,6 +4,7 @@
 import tkinter as tk
 import json
 from tkinter import ttk, messagebox
+from datetime import datetime
 
 # Load equipment records that were saved previously
 with open("equipment_data.json", "r") as file:
@@ -643,19 +644,572 @@ def open_equipment_window():
         command=delete_equipment
     ).grid(row=1, column=1, pady=10)
 
+
 def open_work_order_window():
-    # Open the work order window
+    # Open the window for managing maintenance work orders
     work_order_window = tk.Toplevel(root)
     work_order_window.title("Work Orders")
-    work_order_window.geometry("800x500")
+    work_order_window.geometry("1200x650")
 
-    work_order_heading = tk.Label(
+    tk.Label(
         work_order_window,
         text="Work Orders",
         font=("Arial", 16, "bold")
-    )
-    work_order_heading.pack(pady=20)
+    ).pack(pady=15)
 
+    # Set up the work order table
+    columns = (
+        "Work Order ID", "Equipment ID", "Fault Description",
+        "Priority", "Status"
+    )
+
+    table_frame = tk.Frame(work_order_window)
+    table_frame.pack(fill=tk.BOTH, expand=True, padx=15, pady=10)
+
+    work_order_table = ttk.Treeview(
+        table_frame,
+        columns=columns,
+        show="headings",
+        height=8
+    )
+
+    for column in columns:
+        work_order_table.heading(column, text=column)
+        work_order_table.column(column, width=180, anchor="center")
+
+    # Add a scrollbar for viewing all work orders
+    scrollbar = ttk.Scrollbar(
+        table_frame,
+        orient=tk.VERTICAL,
+        command=work_order_table.yview
+    )
+    work_order_table.configure(yscrollcommand=scrollbar.set)
+
+    work_order_table.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+    # Use the same alternating colours as the equipment table
+    work_order_table.tag_configure("evenrow", background="#FFFFFF")
+    work_order_table.tag_configure("oddrow", background="#C5D3E0")
+
+    def load_work_orders():
+        # Read the latest work orders from JSON
+        with open("work_orders.json", "r") as file:
+            records = json.load(file)
+
+        work_order_list.clear()
+        work_order_list.extend(records)
+        return records
+
+    def display_work_orders(records):
+        # Clear old rows before displaying the requested records
+        for item in work_order_table.get_children():
+            work_order_table.delete(item)
+
+        for index, order in enumerate(records):
+            row_tag = "evenrow" if index % 2 == 0 else "oddrow"
+
+            work_order_table.insert("", tk.END, values=(
+                order["id"],
+                order["equipment_id"],
+                order["fault_description"],
+                order["priority"],
+                order["status"]
+            ), tags=(row_tag,))
+
+    def refresh_work_orders():
+        # Reload all work orders and refresh the table
+        display_work_orders(load_work_orders())
+
+    refresh_work_orders()
+
+    # Keep the work order action buttons together
+    button_frame = tk.Frame(work_order_window)
+    button_frame.pack(pady=10)
+
+    # Show only one work order form at a time
+    form_container = tk.Frame(work_order_window)
+    form_container.pack(fill=tk.X, padx=15, pady=5)
+
+    create_frame = tk.Frame(form_container)
+    search_frame = tk.Frame(form_container)
+    update_frame = tk.Frame(form_container)
+    delete_frame = tk.Frame(form_container)
+
+    active_form = None
+
+    def show_form(frame):
+        nonlocal active_form
+
+        if active_form is not None:
+            active_form.pack_forget()
+
+        if active_form == frame:
+            active_form = None
+        else:
+            frame.pack(pady=10)
+            active_form = frame
+
+    def show_create_form():
+        refresh_work_orders()
+        show_form(create_frame)
+
+    def show_search_form():
+        refresh_work_orders()
+        show_form(search_frame)
+
+    def show_update_form():
+        refresh_work_orders()
+        show_form(update_frame)
+
+    def show_delete_form():
+        refresh_work_orders()
+        show_form(delete_frame)
+
+    # Create the buttons for managing work orders
+    # Work orders are already displayed automatically in the table
+    actions = (
+        ("Create Work Order", show_create_form),
+        ("Search Work Order", show_search_form),
+        ("Update Work Order", show_update_form),
+        ("Delete Work Order", show_delete_form)
+    )
+
+    for label, action in actions:
+        tk.Button(
+            button_frame,
+            text=label,
+            command=action,
+            width=19,
+            font=("Arial", 10)
+        ).pack(side=tk.LEFT, padx=4)
+
+    def add_field(frame, label, row):
+        # Create a labelled input field
+        tk.Label(frame, text=label).grid(
+            row=row, column=0, padx=10, pady=6, sticky="e"
+        )
+        entry = tk.Entry(frame, width=35)
+        entry.grid(row=row, column=1, padx=10, pady=6)
+        return entry
+
+    def equipment_exists(equipment_id):
+        # Confirm that the equipment is registered
+        with open("equipment_data.json", "r") as file:
+            records = json.load(file)
+
+        return any(
+            equipment["id"].casefold() == equipment_id.casefold()
+            for equipment in records
+        )
+
+    def linked_history_exists(work_order_id):
+        # Check whether a work order has maintenance history
+        with open("maintenance_history.json", "r") as file:
+            records = json.load(file)
+
+        return any(
+            isinstance(history.get("work_order_id"), str)
+            and history["work_order_id"].casefold() == work_order_id.casefold()
+            for history in records
+        )
+
+    # ---------------- CREATE WORK ORDER ----------------
+
+    fault_entry = add_field(create_frame, "Fault Description", 0)
+    equipment_entry = add_field(create_frame, "Equipment ID", 1)
+
+    tk.Label(create_frame, text="Priority").grid(
+        row=2, column=0, padx=10, pady=6
+    )
+
+    priority_choice = ttk.Combobox(
+        create_frame,
+        values=("Low", "Medium", "High"),
+        state="readonly",
+        width=32
+    )
+    priority_choice.grid(row=2, column=1, padx=10, pady=6)
+
+    def create_work_order_gui():
+        # Read and validate the work order details
+        fault = fault_entry.get().strip()
+        equipment_id = equipment_entry.get().strip().upper()
+        priority = priority_choice.get().strip()
+
+        if not fault or not equipment_id or not priority:
+            messagebox.showwarning(
+                "Missing Information",
+                "Fault Description, Equipment ID and Priority are required."
+            )
+            return
+
+        if not equipment_exists(equipment_id):
+            messagebox.showwarning(
+                "Invalid Equipment",
+                "Equipment ID not found. Enter a registered equipment ID."
+            )
+            return
+
+        # Read the latest counter and generate an unused work order ID
+        with open("id_counters.json", "r") as file:
+            counters = json.load(file)
+
+        orders = load_work_orders()
+        next_number = counters["last_work_order_id"] + 1
+        work_order_id = f"WO{next_number:03d}"
+
+        existing_ids = {order["id"].casefold() for order in orders}
+
+        while work_order_id.casefold() in existing_ids:
+            next_number += 1
+            work_order_id = f"WO{next_number:03d}"
+
+        # Every new work order starts with Pending status
+        new_order = {
+            "id": work_order_id,
+            "fault_description": fault,
+            "equipment_id": equipment_id,
+            "priority": priority,
+            "status": "Pending"
+        }
+
+        orders.append(new_order)
+        counters["last_work_order_id"] = next_number
+
+        # Save the work order and its ID counter
+        with open("work_orders.json", "w") as file:
+            json.dump(orders, file, indent=4)
+
+        with open("id_counters.json", "w") as file:
+            json.dump(counters, file, indent=4)
+
+        refresh_work_orders()
+
+        messagebox.showinfo(
+            "Success",
+            f"Work Order {work_order_id} created successfully."
+        )
+
+        fault_entry.delete(0, tk.END)
+        equipment_entry.delete(0, tk.END)
+        priority_choice.set("")
+
+    tk.Button(
+        create_frame,
+        text="Save Work Order",
+        command=create_work_order_gui
+    ).grid(row=3, column=1, pady=12)
+
+    # ---------------- SEARCH WORK ORDER ----------------
+
+    search_entry = add_field(search_frame, "Work Order ID", 0)
+
+    def search_work_order_gui():
+        # Search without considering uppercase or lowercase letters
+        search_id = search_entry.get().strip()
+
+        if not search_id:
+            messagebox.showwarning(
+                "Missing Information", "Enter a work order ID."
+            )
+            return
+
+        for order in load_work_orders():
+            if order["id"].casefold() == search_id.casefold():
+                display_work_orders([order])
+                return
+
+        messagebox.showwarning(
+            "Not Found", "Work order not found. Check the work order ID."
+        )
+
+    tk.Button(
+        search_frame,
+        text="Search",
+        command=search_work_order_gui
+    ).grid(row=1, column=1, pady=10)
+
+    # ---------------- UPDATE WORK ORDER ----------------
+
+    update_id_entry = add_field(update_frame, "Work Order ID", 0)
+
+    update_fields = {}
+    update_labels = (
+        ("fault_description", "Fault Description"),
+        ("equipment_id", "Equipment ID")
+    )
+
+    for row, (field, label) in enumerate(update_labels, start=1):
+        update_fields[field] = add_field(update_frame, label, row)
+
+    tk.Label(update_frame, text="Priority").grid(
+        row=3, column=0, padx=10, pady=6
+    )
+    update_priority = ttk.Combobox(
+        update_frame,
+        values=("Low", "Medium", "High"),
+        state="readonly",
+        width=32
+    )
+    update_priority.grid(row=3, column=1, padx=10, pady=6)
+
+    tk.Label(update_frame, text="Status").grid(
+        row=4, column=0, padx=10, pady=6
+    )
+    update_status = ttk.Combobox(
+        update_frame,
+        values=("Pending", "In Progress", "Completed"),
+        state="readonly",
+        width=32
+    )
+    update_status.grid(row=4, column=1, padx=10, pady=6)
+
+    selected_work_order_id = None
+
+    def find_work_order_to_update():
+        nonlocal selected_work_order_id
+
+        selected_work_order_id = None
+        search_id = update_id_entry.get().strip()
+
+        if not search_id:
+            messagebox.showwarning(
+                "Missing Information", "Enter a work order ID."
+            )
+            return
+
+        for order in load_work_orders():
+            if order["id"].casefold() == search_id.casefold():
+
+                # Protect completed work orders with linked history
+                if (
+                    order["status"].casefold() == "completed"
+                    and linked_history_exists(order["id"])
+                ):
+                    messagebox.showwarning(
+                        "Update Not Allowed",
+                        "This completed work order has linked maintenance "
+                        "history and cannot be updated."
+                    )
+                    return
+
+                selected_work_order_id = order["id"]
+
+                for field, entry in update_fields.items():
+                    entry.delete(0, tk.END)
+                    entry.insert(0, order[field])
+
+                update_priority.set(order["priority"])
+                update_status.set(order["status"])
+                display_work_orders([order])
+                return
+
+        messagebox.showwarning("Not Found", "Work order not found.")
+
+    def save_work_order_update():
+        nonlocal selected_work_order_id
+
+        if selected_work_order_id is None:
+            messagebox.showwarning(
+                "Missing Information", "Find a work order first."
+            )
+            return
+
+        fault = update_fields["fault_description"].get().strip()
+        equipment_id = update_fields["equipment_id"].get().strip().upper()
+        priority = update_priority.get().strip()
+        status = update_status.get().strip()
+
+        # Validate all fields before changing the work order
+        if not fault or not equipment_id or not priority or not status:
+            messagebox.showwarning(
+                "Missing Information", "All work order fields are required."
+            )
+            return
+
+        if not equipment_exists(equipment_id):
+            messagebox.showwarning(
+                "Invalid Equipment", "Equipment ID not found."
+            )
+            return
+
+        if priority not in ("Low", "Medium", "High"):
+            messagebox.showwarning(
+                "Invalid Priority", "Select Low, Medium or High."
+            )
+            return
+
+        if status not in ("Pending", "In Progress", "Completed"):
+            messagebox.showwarning(
+                "Invalid Status", "Select a valid work order status."
+            )
+            return
+
+        orders = load_work_orders()
+        selected_order = None
+
+        for order in orders:
+            if order["id"].casefold() == selected_work_order_id.casefold():
+                selected_order = order
+                break
+
+        if selected_order is None:
+            messagebox.showwarning(
+                "Not Found", "This work order no longer exists."
+            )
+            selected_work_order_id = None
+            return
+
+        # Check again before saving to protect linked history
+        if (
+            selected_order["status"].casefold() == "completed"
+            and linked_history_exists(selected_order["id"])
+        ):
+            messagebox.showwarning(
+                "Update Not Allowed",
+                "This completed work order has linked maintenance history."
+            )
+            return
+
+        # Check whether this update completes the work order
+        completing_order = (
+            status == "Completed"
+            and selected_order["status"].casefold() != "completed"
+        )
+
+        # Apply the validated changes
+        selected_order.update({
+            "fault_description": fault,
+            "equipment_id": equipment_id,
+            "priority": priority,
+            "status": status
+        })
+
+        # Create maintenance history automatically when completed
+        if completing_order and not linked_history_exists(selected_order["id"]):
+            with open("maintenance_history.json", "r") as file:
+                history_records = json.load(file)
+
+            with open("id_counters.json", "r") as file:
+                counters = json.load(file)
+
+            next_number = counters["last_history_id"] + 1
+            history_id = f"MH{next_number:03d}"
+
+            existing_ids = {
+                history["id"].casefold() for history in history_records
+            }
+
+            while history_id.casefold() in existing_ids:
+                next_number += 1
+                history_id = f"MH{next_number:03d}"
+
+            # Use the same history fields as main.py
+            history_records.append({
+                "id": history_id,
+                "work_order_id": selected_order["id"],
+                "equipment_id": selected_order["equipment_id"],
+                "maintenance_date": datetime.today().strftime("%Y-%m-%d"),
+                "work_performed": "",
+                "parts_replaced": "",
+                "fault_description": selected_order["fault_description"],
+                "maintenance_cost_currency": None,
+                "maintenance_cost": None
+            })
+
+            counters["last_history_id"] = next_number
+
+            with open("maintenance_history.json", "w") as file:
+                json.dump(history_records, file, indent=4)
+
+            with open("id_counters.json", "w") as file:
+                json.dump(counters, file, indent=4)
+
+        # Save the updated work order details
+        with open("work_orders.json", "w") as file:
+            json.dump(orders, file, indent=4)
+
+        refresh_work_orders()
+        selected_work_order_id = None
+
+        messagebox.showinfo(
+            "Success", "Work order updated successfully."
+        )
+
+    tk.Button(
+        update_frame,
+        text="Find Work Order",
+        command=find_work_order_to_update
+    ).grid(row=0, column=2, padx=10)
+
+    tk.Button(
+        update_frame,
+        text="Save Changes",
+        command=save_work_order_update
+    ).grid(row=5, column=1, pady=12)
+
+    # ---------------- DELETE WORK ORDER ----------------
+
+    delete_id_entry = add_field(delete_frame, "Work Order ID", 0)
+
+    def delete_work_order_gui():
+        # Find the work order before attempting deletion
+        delete_id = delete_id_entry.get().strip()
+
+        if not delete_id:
+            messagebox.showwarning(
+                "Missing Information", "Enter a work order ID."
+            )
+            return
+
+        orders = load_work_orders()
+        order_to_delete = None
+
+        for order in orders:
+            if order["id"].casefold() == delete_id.casefold():
+                order_to_delete = order
+                break
+
+        if order_to_delete is None:
+            messagebox.showwarning("Not Found", "Work order not found.")
+            return
+
+        # Do not delete work orders linked to maintenance history
+        if linked_history_exists(order_to_delete["id"]):
+            messagebox.showwarning(
+                "Deletion Not Allowed",
+                "Cannot delete this work order because it has "
+                "linked maintenance history."
+            )
+            return
+
+        # Ask for confirmation before permanently deleting
+        confirmation = messagebox.askyesno(
+            "Confirm Deletion",
+            f"Are you sure you want to delete {order_to_delete['id']}?"
+        )
+
+        if not confirmation:
+            return
+
+        orders.remove(order_to_delete)
+
+        with open("work_orders.json", "w") as file:
+            json.dump(orders, file, indent=4)
+
+        refresh_work_orders()
+        delete_id_entry.delete(0, tk.END)
+
+        messagebox.showinfo(
+            "Success", "Work order deleted successfully."
+        )
+
+    tk.Button(
+        delete_frame,
+        text="Delete Work Order",
+        command=delete_work_order_gui
+    ).grid(row=1, column=1, pady=10)
 
 def open_schedule_window():
     # Open the maintenance scheduling window
