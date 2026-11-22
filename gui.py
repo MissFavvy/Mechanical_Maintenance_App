@@ -5,6 +5,7 @@ import tkinter as tk
 import json
 from tkinter import ttk, messagebox
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 # Load equipment records that were saved previously
 with open("equipment_data.json", "r") as file:
@@ -1215,15 +1216,622 @@ def open_schedule_window():
     # Open the maintenance scheduling window
     schedule_window = tk.Toplevel(root)
     schedule_window.title("Maintenance Scheduling")
-    schedule_window.geometry("800x500")
+    schedule_window.geometry("1000x650")
 
-    schedule_heading = tk.Label(
+    tk.Label(
         schedule_window,
-        text="Maintenance Schedule",
+        text="Maintenance Scheduling",
         font=("Arial", 16, "bold")
-    )
-    schedule_heading.pack(pady=20)
+    ).pack(pady=15)
 
+    # Create the table to display maintenance schedules
+    columns = (
+        "Schedule ID",
+        "Equipment ID",
+        "Maintenance Task",
+        "Last Maintenance",
+        "Interval",
+        "Next Maintenance",
+        "Status"
+    )
+
+    table_frame = tk.Frame(schedule_window)
+    table_frame.pack(fill=tk.BOTH, padx=15, pady=10)
+
+    schedule_table = ttk.Treeview(
+        table_frame,
+        columns=columns,
+        show="headings",
+        height=9
+    )
+
+    widths = (105, 110, 250, 135, 125, 135, 110)
+
+    for column, width in zip(columns, widths):
+        schedule_table.heading(column, text=column)
+        schedule_table.column(column, width=width, anchor="center")
+
+    scrollbar = ttk.Scrollbar(
+        table_frame,
+        orient=tk.VERTICAL,
+        command=schedule_table.yview
+    )
+
+    schedule_table.configure(yscrollcommand=scrollbar.set)
+    schedule_table.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+    schedule_table.tag_configure("evenrow", background="#FFFFFF")
+    schedule_table.tag_configure("oddrow", background="#C5D3E0")
+
+    # Load and save maintenance schedules
+    def load_schedules():
+        with open("maintenance_schedule.json", "r") as file:
+            return json.load(file)
+
+    def save_schedules(records):
+        with open("maintenance_schedule.json", "w") as file:
+            json.dump(records, file, indent=4)
+
+    # Determine the current maintenance status
+    def maintenance_status(next_date):
+        today = datetime.today().date()
+        due_date = datetime.strptime(next_date, "%Y-%m-%d").date()
+
+        if due_date < today:
+            return "Overdue"
+        elif due_date == today:
+            return "Due Today"
+        else:
+            return "Upcoming"
+
+    # Display maintenance schedules automatically
+    def display_schedules(records):
+        for item in schedule_table.get_children():
+            schedule_table.delete(item)
+
+        for index, schedule in enumerate(records):
+            row_tag = "evenrow" if index % 2 == 0 else "oddrow"
+
+            schedule_table.insert(
+                "",
+                tk.END,
+                values=(
+                    schedule["id"],
+                    schedule["equipment_id"],
+                    schedule["maintenance_task"],
+                    schedule["last_maintenance_date"],
+                    f'{schedule["maintenance_interval"]} {schedule["interval_unit"]}',
+                    schedule["next_maintenance_date"],
+                    maintenance_status(schedule["next_maintenance_date"])
+                ),
+                tags=(row_tag,)
+            )
+
+    def refresh_schedules():
+        display_schedules(load_schedules())
+
+    refresh_schedules()
+
+    # Check that equipment is registered
+    def equipment_exists(equipment_id):
+        with open("equipment_data.json", "r") as file:
+            equipment_records = json.load(file)
+
+        for equipment in equipment_records:
+            if equipment["id"].casefold() == equipment_id.casefold():
+                return True
+
+        return False
+
+    # Accept the six date formats supported by main.py
+    def validate_date(value):
+        date_formats = (
+            "%Y-%m-%d",
+            "%d-%m-%Y",
+            "%m-%d-%Y",
+            "%Y/%m/%d",
+            "%d/%m/%Y",
+            "%m/%d/%Y"
+        )
+
+        for date_format in date_formats:
+            try:
+                date = datetime.strptime(value, date_format)
+                return date.strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+
+        return None
+
+    # Calculate the next maintenance date
+    def calculate_next_date(last_date, interval, unit):
+        date = datetime.strptime(last_date, "%Y-%m-%d")
+
+        if unit == "Days":
+            next_date = date + timedelta(days=interval)
+        elif unit == "Months":
+            next_date = date + relativedelta(months=interval)
+        else:
+            next_date = date + relativedelta(years=interval)
+
+        return next_date.strftime("%Y-%m-%d")
+
+    # Validate maintenance schedule details
+    def validate_schedule(task, date_text, interval_text, unit):
+        if not task or not date_text or not interval_text or not unit:
+            messagebox.showwarning(
+                "Missing Information",
+                "All maintenance schedule fields are required.",
+                parent=schedule_window
+            )
+            return None
+
+        last_date = validate_date(date_text)
+
+        if last_date is None:
+            messagebox.showwarning(
+                "Invalid Date",
+                "Enter a valid maintenance date.",
+                parent=schedule_window
+            )
+            return None
+
+        try:
+            interval = int(interval_text)
+
+            if interval <= 0:
+                raise ValueError
+
+        except ValueError:
+            messagebox.showwarning(
+                "Invalid Interval",
+                "Maintenance interval must be a whole number greater than zero.",
+                parent=schedule_window
+            )
+            return None
+
+        if unit not in ("Days", "Months", "Years"):
+            messagebox.showwarning(
+                "Invalid Unit",
+                "Select Days, Months or Years.",
+                parent=schedule_window
+            )
+            return None
+
+        next_date = calculate_next_date(last_date, interval, unit)
+
+        return last_date, interval, next_date
+
+    # Create buttons and an area for the forms
+    button_frame = tk.Frame(schedule_window)
+    button_frame.pack(pady=10)
+
+    form_container = tk.Frame(schedule_window)
+    form_container.pack(fill=tk.X, padx=15, pady=5)
+
+    create_frame = tk.Frame(form_container)
+    search_frame = tk.Frame(form_container)
+    update_frame = tk.Frame(form_container)
+    delete_frame = tk.Frame(form_container)
+
+    active_form = None
+
+    def show_form(frame):
+        nonlocal active_form
+
+        if active_form is not None:
+            active_form.pack_forget()
+
+        if active_form == frame:
+            active_form = None
+        else:
+            frame.pack(pady=10)
+            active_form = frame
+
+    def show_create_form():
+        refresh_schedules()
+        show_form(create_frame)
+
+    def show_search_form():
+        refresh_schedules()
+        show_form(search_frame)
+
+    def show_update_form():
+        refresh_schedules()
+        show_form(update_frame)
+
+    def show_delete_form():
+        refresh_schedules()
+        show_form(delete_frame)
+
+    actions = (
+        ("Create Schedule", show_create_form),
+        ("Search Schedule", show_search_form),
+        ("Update Schedule", show_update_form),
+        ("Delete Schedule", show_delete_form)
+    )
+
+    for label, action in actions:
+        tk.Button(
+            button_frame,
+            text=label,
+            command=action,
+            width=19,
+            font=("Arial", 10)
+        ).pack(side=tk.LEFT, padx=5)
+
+    # Create labelled entry fields
+    def add_field(frame, label, row):
+        tk.Label(
+            frame,
+            text=label
+        ).grid(row=row, column=0, padx=10, pady=6, sticky="e")
+
+        entry = tk.Entry(frame, width=35)
+        entry.grid(row=row, column=1, padx=10, pady=6)
+
+        return entry
+
+    # Create a dropdown for interval units
+    def add_unit_field(frame, row):
+        tk.Label(
+            frame,
+            text="Interval Unit"
+        ).grid(row=row, column=0, padx=10, pady=6, sticky="e")
+
+        choice = ttk.Combobox(
+            frame,
+            values=("Days", "Months", "Years"),
+            state="readonly",
+            width=32
+        )
+
+        choice.grid(row=row, column=1, padx=10, pady=6)
+        return choice
+
+    # ---------------- CREATE MAINTENANCE SCHEDULE ----------------
+
+    create_equipment = add_field(create_frame, "Equipment ID", 0)
+    create_task = add_field(create_frame, "Maintenance Task", 1)
+    create_date = add_field(create_frame, "Last Maintenance Date", 2)
+    create_unit = add_unit_field(create_frame, 3)
+    create_interval = add_field(create_frame, "Maintenance Interval", 4)
+
+    def create_schedule_gui():
+        equipment_id = create_equipment.get().strip().upper()
+        task = create_task.get().strip()
+        date_text = create_date.get().strip()
+        interval_text = create_interval.get().strip()
+        unit = create_unit.get().strip()
+
+        if equipment_id == "":
+            messagebox.showwarning(
+                "Missing Information",
+                "Equipment ID cannot be empty.",
+                parent=schedule_window
+            )
+            return
+
+        if not equipment_exists(equipment_id):
+            messagebox.showwarning(
+                "Invalid Equipment",
+                "Equipment ID not found. Enter a registered equipment ID.",
+                parent=schedule_window
+            )
+            return
+
+        validated = validate_schedule(
+            task, date_text, interval_text, unit
+        )
+
+        if validated is None:
+            return
+
+        last_date, interval, next_date = validated
+
+        # Generate the next schedule ID
+        with open("id_counters.json", "r") as file:
+            counters = json.load(file)
+
+        schedules = load_schedules()
+
+        next_number = counters["last_schedule_id"] + 1
+        schedule_id = f"MS{next_number:03d}"
+
+        existing_ids = {
+            schedule["id"].casefold() for schedule in schedules
+        }
+
+        while schedule_id.casefold() in existing_ids:
+            next_number += 1
+            schedule_id = f"MS{next_number:03d}"
+
+        new_schedule = {
+            "id": schedule_id,
+            "equipment_id": equipment_id,
+            "maintenance_task": task,
+            "last_maintenance_date": last_date,
+            "maintenance_interval": interval,
+            "interval_unit": unit,
+            "next_maintenance_date": next_date
+        }
+
+        schedules.append(new_schedule)
+        counters["last_schedule_id"] = next_number
+
+        # Save schedule and counter
+        save_schedules(schedules)
+
+        with open("id_counters.json", "w") as file:
+            json.dump(counters, file, indent=4)
+
+        refresh_schedules()
+
+        messagebox.showinfo(
+            "Success",
+            f"Schedule {schedule_id} created successfully.\n"
+            f"Next maintenance date: {next_date}",
+            parent=schedule_window
+        )
+
+        # Clear the create form
+        create_equipment.delete(0, tk.END)
+        create_task.delete(0, tk.END)
+        create_date.delete(0, tk.END)
+        create_interval.delete(0, tk.END)
+        create_unit.set("")
+
+    tk.Button(
+        create_frame,
+        text="Save Schedule",
+        command=create_schedule_gui
+    ).grid(row=5, column=1, pady=12)
+
+    # ---------------- SEARCH MAINTENANCE SCHEDULE ----------------
+
+    search_entry = add_field(search_frame, "Schedule ID", 0)
+
+    def search_schedule_gui():
+        search_id = search_entry.get().strip()
+
+        if search_id == "":
+            messagebox.showwarning(
+                "Missing Information",
+                "Enter a schedule ID.",
+                parent=schedule_window
+            )
+            return
+
+        schedules = load_schedules()
+
+        for schedule in schedules:
+            if schedule["id"].casefold() == search_id.casefold():
+                display_schedules([schedule])
+                return
+
+        messagebox.showwarning(
+            "Not Found",
+            "Maintenance schedule not found. Check the schedule ID.",
+            parent=schedule_window
+        )
+
+    tk.Button(
+        search_frame,
+        text="Search",
+        command=search_schedule_gui
+    ).grid(row=1, column=1, pady=10)
+
+    # ---------------- UPDATE MAINTENANCE SCHEDULE ----------------
+
+    update_id = add_field(update_frame, "Schedule ID", 0)
+    update_task = add_field(update_frame, "Maintenance Task", 1)
+    update_date = add_field(update_frame, "Last Maintenance Date", 2)
+    update_unit = add_unit_field(update_frame, 3)
+    update_interval = add_field(update_frame, "Maintenance Interval", 4)
+
+    selected_schedule_id = None
+
+    def clear_update_form():
+        update_id.delete(0, tk.END)
+        update_task.delete(0, tk.END)
+        update_date.delete(0, tk.END)
+        update_interval.delete(0, tk.END)
+        update_unit.set("")
+
+    def find_schedule_to_update():
+        nonlocal selected_schedule_id
+
+        selected_schedule_id = None
+        schedule_id = update_id.get().strip()
+
+        if schedule_id == "":
+            messagebox.showwarning(
+                "Missing Information",
+                "Enter a schedule ID.",
+                parent=schedule_window
+            )
+            return
+
+        schedules = load_schedules()
+
+        for schedule in schedules:
+            if schedule["id"].casefold() == schedule_id.casefold():
+                selected_schedule_id = schedule["id"]
+
+                # Fill the form with existing details
+                update_task.delete(0, tk.END)
+                update_task.insert(0, schedule["maintenance_task"])
+
+                update_date.delete(0, tk.END)
+                update_date.insert(0, schedule["last_maintenance_date"])
+
+                update_interval.delete(0, tk.END)
+                update_interval.insert(
+                    0, str(schedule["maintenance_interval"])
+                )
+
+                update_unit.set(schedule["interval_unit"])
+                display_schedules([schedule])
+                return
+
+        messagebox.showwarning(
+            "Not Found",
+            "Maintenance schedule not found.",
+            parent=schedule_window
+        )
+
+    def save_schedule_update():
+        nonlocal selected_schedule_id
+
+        if selected_schedule_id is None:
+            messagebox.showwarning(
+                "Missing Information",
+                "Find a schedule first.",
+                parent=schedule_window
+            )
+            return
+
+        task = update_task.get().strip()
+        date_text = update_date.get().strip()
+        interval_text = update_interval.get().strip()
+        unit = update_unit.get().strip()
+
+        validated = validate_schedule(
+            task, date_text, interval_text, unit
+        )
+
+        if validated is None:
+            return
+
+        last_date, interval, next_date = validated
+
+        schedules = load_schedules()
+        selected_schedule = None
+
+        for schedule in schedules:
+            if schedule["id"].casefold() == selected_schedule_id.casefold():
+                selected_schedule = schedule
+                break
+
+        if selected_schedule is None:
+            messagebox.showwarning(
+                "Not Found",
+                "This maintenance schedule no longer exists.",
+                parent=schedule_window
+            )
+            selected_schedule_id = None
+            return
+
+        # Save changes together and recalculate next maintenance
+        selected_schedule["maintenance_task"] = task
+        selected_schedule["last_maintenance_date"] = last_date
+        selected_schedule["maintenance_interval"] = interval
+        selected_schedule["interval_unit"] = unit
+        selected_schedule["next_maintenance_date"] = next_date
+
+        save_schedules(schedules)
+        refresh_schedules()
+
+        selected_schedule_id = None
+        clear_update_form()
+
+        messagebox.showinfo(
+            "Success",
+            "Maintenance schedule updated successfully.\n"
+            f"Next maintenance date: {next_date}",
+            parent=schedule_window
+        )
+
+    def cancel_schedule_update():
+        nonlocal selected_schedule_id
+
+        # Discard unsaved changes
+        selected_schedule_id = None
+        clear_update_form()
+        refresh_schedules()
+
+        messagebox.showinfo(
+            "Update Canceled",
+            "Update canceled. No changes were saved.",
+            parent=schedule_window
+        )
+
+    tk.Button(
+        update_frame,
+        text="Find Schedule",
+        command=find_schedule_to_update
+    ).grid(row=0, column=2, padx=10)
+
+    tk.Button(
+        update_frame,
+        text="Save Changes",
+        command=save_schedule_update
+    ).grid(row=5, column=1, pady=12)
+
+    tk.Button(
+        update_frame,
+        text="Cancel",
+        command=cancel_schedule_update
+    ).grid(row=5, column=2, padx=10, pady=12)
+
+    # ---------------- DELETE MAINTENANCE SCHEDULE ----------------
+
+    delete_id = add_field(delete_frame, "Schedule ID", 0)
+
+    def delete_schedule_gui():
+        schedule_id = delete_id.get().strip()
+
+        if schedule_id == "":
+            messagebox.showwarning(
+                "Missing Information",
+                "Enter a schedule ID.",
+                parent=schedule_window
+            )
+            return
+
+        schedules = load_schedules()
+        selected_schedule = None
+
+        for schedule in schedules:
+            if schedule["id"].casefold() == schedule_id.casefold():
+                selected_schedule = schedule
+                break
+
+        if selected_schedule is None:
+            messagebox.showwarning(
+                "Not Found",
+                "Maintenance schedule not found.",
+                parent=schedule_window
+            )
+            return
+
+        confirmation = messagebox.askyesno(
+            "Confirm Deletion",
+            f"Are you sure you want to delete {selected_schedule['id']}?",
+            parent=schedule_window
+        )
+
+        if not confirmation:
+            return
+
+        schedules.remove(selected_schedule)
+        save_schedules(schedules)
+        refresh_schedules()
+
+        delete_id.delete(0, tk.END)
+
+        messagebox.showinfo(
+            "Success",
+            "Maintenance schedule deleted successfully.",
+            parent=schedule_window
+        )
+
+    tk.Button(
+        delete_frame,
+        text="Delete Schedule",
+        command=delete_schedule_gui
+    ).grid(row=1, column=1, pady=10)
 
 def open_history_window():
     # Open the maintenance history window
