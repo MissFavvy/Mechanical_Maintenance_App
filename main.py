@@ -134,107 +134,103 @@ def search_equipment():
     if found == False:
         print("Equipment not found. Please check the equipment ID.")
 
-
-# Find the selected equipment and let the user change one of its details
+# Update several equipment details before saving the changes
 def update_equipment_details():
     equipment_id = input("Enter the equipment ID you want to update: ").strip()
-    found = False
 
     for equipment in equipment_list:
         if equipment["id"].casefold() == equipment_id.casefold():
-            found = True
-
             print("Equipment found!")
             print(equipment)
 
-            # Show the fields that can be updated for this equipment
-            print("\nWhat would you like to update?")
-            print("1. Equipment Name")
-            print("2. Equipment Type")
-            print("3. Equipment Location")
-            print("4. Temperature")
-            print("5. Vibration")
-            print("6. Operating Hours")
+            # Keep the original record unchanged until the user saves
+            updated_equipment = equipment.copy()
 
-            # Get the user's choice of which equipment detail to update
-            choice = input("Enter your choice: ")
+            while True:
+                print("\nWhat would you like to update?")
+                print("1. Equipment Name")
+                print("2. Equipment Type")
+                print("3. Equipment Location")
+                print("4. Temperature")
+                print("5. Vibration")
+                print("6. Operating Hours")
+                print("7. Save Changes")
+                print("8. Cancel")
 
-            if choice == "1":
-                while True:
-                    new_value = input("Enter new equipment name: ").strip().title()
+                choice = input("Enter your choice: ").strip()
 
-                    if new_value == "":
-                        print("Equipment name cannot be empty. Please try again.")
-                        continue
+                if choice in ["1", "2", "3"]:
+                    # Check that equipment text fields are not empty
+                    fields = {
+                        "1": ("name", "equipment name"),
+                        "2": ("type", "equipment type"),
+                        "3": ("location", "equipment location")
+                    }
 
-                    equipment["name"] = new_value
-                    break   
-
-            elif choice == "2":
-                while True:
-                    new_value = input("Enter new equipment type: ").strip().title()
-
-                    if new_value == "":
-                        print("Equipment type cannot be empty. Please try again.")
-                        continue
-
-                    equipment["type"] = new_value
-                    break
-
-            elif choice == "3":
-                while True:
-                    new_value = input("Enter new equipment location: ").strip().title()
-
-                    if new_value == "":
-                        print("Equipment location cannot be empty. Please try again.")
-                        continue
-
-                    equipment["location"] = new_value
-                    break
-
-            # Temperature, vibration and operating hours all use number validation
-            elif choice in ["4", "5", "6"]:
-
-                    if choice == "4":
-                        field = "temperature"
-                        field_name = "temperature"
-
-                    elif choice == "5":
-                        field = "vibration"
-                        field_name = "vibration"
-
-                    else:
-                        field = "operating_hours"
-                        field_name = "operating hours"
+                    field, field_name = fields[choice]
 
                     while True:
                         new_value = input(
-                            f"Enter new equipment {field_name} (press Enter if unavailable): "
+                            f"Enter new {field_name}: "
                         ).strip()
 
                         if new_value == "":
-                            equipment[field] = None
+                            print(f"{field_name.title()} cannot be empty.")
+                            continue
+
+                        updated_equipment[field] = new_value.title()
+                        break
+
+                elif choice in ["4", "5", "6"]:
+                    # Accept numbers or None for unavailable readings
+                    fields = {
+                        "4": ("temperature", "temperature"),
+                        "5": ("vibration", "vibration"),
+                        "6": ("operating_hours", "operating hours")
+                    }
+
+                    field, field_name = fields[choice]
+
+                    while True:
+                        new_value = input(
+                            f"Enter new {field_name} (press Enter if unavailable): "
+                        ).strip()
+
+                        if new_value == "":
+                            updated_equipment[field] = None
                             break
 
                         try:
-                            equipment[field] = float(new_value)
+                            updated_equipment[field] = float(new_value)
                             break
 
                         except ValueError:
                             print(f"Invalid {field_name}. Please enter a number.")
-            
-            else:
-                print("Invalid choice. Please select an option from 1 to 6.")
-                return
 
-            with open("equipment_data.json", "w") as file:
-                json.dump(equipment_list, file, indent=4)
+                elif choice == "7":
+                    # Save all changes together in the JSON file
+                    equipment.update(updated_equipment)
 
-            print("Equipment details updated successfully!")
+                    with open("equipment_data.json", "w") as file:
+                        json.dump(equipment_list, file, indent=4)
+
+                    print("Equipment details updated successfully!")
+                    return
+
+                elif choice == "8":
+                    # Leave the original equipment record unchanged
+                    print("Update canceled. No changes were saved.")
+                    return
+
+                else:
+                    print("Invalid choice. Please select 1 to 8.")
+
+                print("\nCurrent changes:")
+                print(updated_equipment)
+
             return
 
-    if found == False:
-        print("Equipment not found. Please check the equipment ID.")    
+    print("Equipment not found. Please check the equipment ID.")   
 
 # Check for linked maintenance records before allowing equipment to be deleted
 def delete_equipment():
@@ -423,119 +419,144 @@ def create_automatic_maintenance_history(work_order):
     print("Maintenance history automatically created!")
     print("History ID:", history_id)
 
-# Allow the user to change the details of an existing work order
+# Update several work order details before saving
 def update_work_order():
     work_order_id = input("Enter the work order ID you want to update: ").strip()
-    found = False
 
     for work_order in work_order_list:
         if work_order["id"].casefold() == work_order_id.casefold():
-            found = True
-
             print("Work order found!")
             print(work_order)
-            
-            # Check if the work order already has a linked maintenance history
-            has_maintenance_history = False
-            for history in maintenance_history_list:
-                linked_id = history.get("work_order_id")
-                if isinstance(linked_id, str) and linked_id.casefold() == work_order["id"].casefold():
-                    has_maintenance_history = True
-                    break   
 
-            # Prevent changes to completed work orders with linked history records
-            if work_order["status"] == "Completed" and has_maintenance_history:
-                print("This completed work order has linked maintenance history and cannot be updated.")
+            # Check whether this work order already has linked history
+            has_history = any(
+                isinstance(history.get("work_order_id"), str)
+                and history["work_order_id"].casefold() == work_order["id"].casefold()
+                for history in maintenance_history_list
+            )
+
+            # Protect completed work orders with maintenance history
+            if work_order["status"].casefold() == "completed" and has_history:
+                print(
+                    "This completed work order has linked maintenance "
+                    "history and cannot be updated."
+                )
                 return
 
-            # Let the user choose which work order detail needs changing
-            print("\nWhat would you like to update?")
-            print("1. Fault Description")
-            print("2. Equipment ID")
-            print("3. Maintenance Priority")
-            print("4. Status")
+            # Keep proposed changes separate until they are saved
+            updated_order = work_order.copy()
 
-            choice = input("Enter your choice: ")
+            while True:
+                print("\nWhat would you like to update?")
+                print("1. Fault Description")
+                print("2. Equipment ID")
+                print("3. Maintenance Priority")
+                print("4. Status")
+                print("5. Save Changes")
+                print("6. Cancel")
 
-            if choice == "1":
-                while True:
-                    new_value = input("Enter new fault description: ").strip()
+                choice = input("Enter your choice: ").strip()
 
-                    if new_value == "":
-                        print("Fault description cannot be empty. Please try again.")
-                        continue
+                if choice == "1":
+                    # Fault description must explain the maintenance issue
+                    while True:
+                        new_value = input(
+                            "Enter new fault description: "
+                        ).strip()
 
-                    work_order["fault_description"] = new_value
-                    break   
+                        if not new_value:
+                            print("Fault description cannot be empty.")
+                            continue
 
-            elif choice == "2":
-                while True:
-                    new_value = input("Enter new equipment ID: ").strip().upper()
+                        updated_order["fault_description"] = new_value
+                        break
 
-                    if new_value == "":
-                        print("Equipment ID cannot be empty. Please try again.")
-                        continue
+                elif choice == "2":
+                    # Only registered equipment can have a work order
+                    while True:
+                        new_value = input(
+                            "Enter new equipment ID: "
+                        ).strip().upper()
 
-                    # Make sure the new equipment ID belongs to registered equipment
-                    found_equipment = False
-                    for equipment in equipment_list:
-                        if equipment["id"].casefold() == new_value.casefold():
-                            found_equipment = True
-                            break
+                        if not new_value:
+                            print("Equipment ID cannot be empty.")
+                            continue
 
-                    if not found_equipment:
-                        print("Equipment ID not found. Please enter a valid equipment ID.")
-                        continue
+                        equipment_found = any(
+                            equipment["id"].casefold() == new_value.casefold()
+                            for equipment in equipment_list
+                        )
 
-                    work_order["equipment_id"] = new_value
-                    break
+                        if not equipment_found:
+                            print("Equipment ID not found.")
+                            continue
 
-            elif choice == "3":
-                while True:
-                    new_value = input("Enter new maintenance priority (Low/Medium/High): ").strip().title()
+                        updated_order["equipment_id"] = new_value
+                        break
 
-                    if new_value == "":
-                        print("Maintenance priority cannot be empty. Please try again.")
-                        continue
+                elif choice == "3":
+                    # Only three maintenance priorities are allowed
+                    while True:
+                        new_value = input(
+                            "Enter new priority (Low/Medium/High): "
+                        ).strip().title()
 
-                    if new_value.casefold() not in ["low", "medium", "high"]:
-                        print("Invalid priority. Please enter Low, Medium, or High.")
-                        continue
+                        if new_value not in ["Low", "Medium", "High"]:
+                            print("Invalid priority.")
+                            continue
 
-                    work_order["priority"] = new_value
-                    break
+                        updated_order["priority"] = new_value
+                        break
 
-            elif choice == "4":
-                while True:
-                    new_value = input("Enter new status (Pending/In Progress/Completed): ").strip().title()
+                elif choice == "4":
+                    # Check that the new work order status is valid
+                    while True:
+                        new_value = input(
+                            "Enter new status (Pending/In Progress/Completed): "
+                        ).strip().title()
 
-                    if new_value == "":
-                        print("Status cannot be empty. Please try again.")
-                        continue
+                        if new_value not in [
+                            "Pending", "In Progress", "Completed"
+                        ]:
+                            print("Invalid status.")
+                            continue
 
-                    if new_value.casefold() not in ["pending", "in progress", "completed"]:
-                        print("Invalid status. Please enter Pending, In Progress, or Completed.")
-                        continue
+                        updated_order["status"] = new_value
+                        break
 
-                    work_order["status"] = new_value
+                elif choice == "5":
+                    # Save the changes only when the user confirms
+                    completing_order = (
+                        updated_order["status"] == "Completed"
+                        and work_order["status"].casefold() != "completed"
+                    )
 
-                    # Completing a work order also creates its maintenance history
-                    if new_value.casefold() == "completed":
+                    work_order.update(updated_order)
+
+                    with open("work_orders.json", "w") as file:
+                        json.dump(work_order_list, file, indent=4)
+
+                    # Create history after saving a completed work order
+                    if completing_order:
                         create_automatic_maintenance_history(work_order)
-                    break
-            
-            else:
-                print("Invalid choice. Please try again.")
-                return
 
-            # Keep the updated work order details in the JSON file
-            with open("work_orders.json", "w") as file:
-                json.dump(work_order_list, file, indent=4)
-            
-            print("Work order updated successfully!")
+                    print("Work order updated successfully!")
+                    return
+
+                elif choice == "6":
+                    # Discard changes without changing the original record
+                    print("Update canceled. No changes were saved.")
+                    return
+
+                else:
+                    print("Invalid choice. Please select 1 to 6.")
+
+                print("\nCurrent changes:")
+                print(updated_order)
+
             return
-    if found == False:
-        print("Work order not found. Please check the work order ID.")
+
+    print("Work order not found. Please check the work order ID.")
 
 # Delete a work order only when it has no linked maintenance history
 def delete_work_order():
@@ -786,150 +807,167 @@ def search_maintenance_schedule():
     if not found:
         print("Maintenance schedule not found. Please check the schedule ID.")
 
-# Update the task, last maintenance date or maintenance interval
+# Update several maintenance schedule details before saving
 def update_maintenance_schedule():
     schedule_id = input("Enter maintenance schedule ID to update: ").strip()
-    found = False
 
     for schedule in maintenance_schedule_list:
         if schedule["id"].casefold() == schedule_id.casefold():
-            found = True
-
             print("Maintenance schedule found!")
-            print("Schedule ID:", schedule["id"])
-            print("Equipment ID:", schedule["equipment_id"])
-            print("Maintenance Task:", schedule["maintenance_task"])
-            print("Last Maintenance Date:", schedule["last_maintenance_date"])
-            print("Maintenance Interval:", schedule["maintenance_interval"], schedule["interval_unit"])
+            print(schedule)
 
-            # Let the user choose which part of the schedule to change
-            print("\nWhat would you like to update?")
-            print("1. Maintenance Task")
-            print("2. Last Maintenance Date")
-            print("3. Maintenance Interval and Unit")
+            # Keep the original schedule unchanged until saving
+            updated_schedule = schedule.copy()
 
-            choice = input("Enter your choice: ").strip()
+            while True:
+                print("\nWhat would you like to update?")
+                print("1. Maintenance Task")
+                print("2. Last Maintenance Date")
+                print("3. Maintenance Interval and Unit")
+                print("4. Save Changes")
+                print("5. Cancel")
 
-            if choice == "1":
-                while True:
-                    new_task = input("Enter new maintenance task: ").strip()
+                choice = input("Enter your choice: ").strip()
 
-                    if new_task == "":
-                        print("Maintenance task cannot be empty.")
-                        continue
+                if choice == "1":
+                    # The maintenance task cannot be empty
+                    while True:
+                        new_task = input(
+                            "Enter new maintenance task: "
+                        ).strip()
 
-                    schedule["maintenance_task"] = new_task
-                    break
+                        if not new_task:
+                            print("Maintenance task cannot be empty.")
+                            continue
 
-            elif choice == "2":
-                # Check the new date before replacing the previous maintenance date
-                while True:
-                    new_date = input(
-                        "Enter new last maintenance date (e.g. 19/11/2026 or 2026-11-19): "
-                    ).strip()
+                        updated_schedule["maintenance_task"] = new_task
+                        break
 
+                elif choice == "2":
+                    # Accept the date formats already supported in main.py
                     date_formats = [
-                        "%Y-%m-%d",
-                        "%d-%m-%Y",
-                        "%m-%d-%Y",
-                        "%Y/%m/%d",
-                        "%d/%m/%Y",
-                        "%m/%d/%Y"
+                        "%Y-%m-%d", "%d-%m-%Y", "%m-%d-%Y",
+                        "%Y/%m/%d", "%d/%m/%Y", "%m/%d/%Y"
                     ]
 
-                    date = None
+                    while True:
+                        new_date = input(
+                            "Enter new last maintenance date: "
+                        ).strip()
 
-                    for date_format in date_formats:
+                        parsed_date = None
+
+                        for date_format in date_formats:
+                            try:
+                                parsed_date = datetime.strptime(
+                                    new_date, date_format
+                                )
+                                break
+                            except ValueError:
+                                continue
+
+                        if parsed_date is None:
+                            print("Invalid date. Please try again.")
+                            continue
+
+                        updated_schedule["last_maintenance_date"] = (
+                            parsed_date.strftime("%Y-%m-%d")
+                        )
+                        break
+
+                elif choice == "3":
+                    # Select the unit used for recurring maintenance
+                    while True:
+                        print("\nSelect maintenance interval unit:")
+                        print("1. Days")
+                        print("2. Months")
+                        print("3. Years")
+
+                        unit_choice = input("Enter your choice: ").strip()
+
+                        units = {
+                            "1": "Days",
+                            "2": "Months",
+                            "3": "Years"
+                        }
+
+                        if unit_choice in units:
+                            interval_unit = units[unit_choice]
+                            break
+
+                        print("Invalid choice. Please select 1, 2 or 3.")
+
+                    # The interval must be a positive whole number
+                    while True:
+                        new_interval = input(
+                            f"Enter maintenance interval ({interval_unit}): "
+                        ).strip()
+
                         try:
-                            date = datetime.strptime(new_date, date_format)
+                            new_interval = int(new_interval)
+
+                            if new_interval <= 0:
+                                print("Maintenance interval must be greater than zero.")
+                                continue
+
                             break
 
                         except ValueError:
-                            continue
+                            print("Invalid interval. Please enter a whole number.")
 
-                    if date is None:
-                        print("Invalid date. Please enter a valid date.")
-                        continue
+                    updated_schedule["maintenance_interval"] = new_interval
+                    updated_schedule["interval_unit"] = interval_unit
 
-                    schedule["last_maintenance_date"] = date.strftime("%Y-%m-%d")
-                    break
+                elif choice == "4":
+                    # Recalculate the next maintenance date before saving
+                    last_date = datetime.strptime(
+                        updated_schedule["last_maintenance_date"],
+                        "%Y-%m-%d"
+                    )
 
-            elif choice == "3":
-                # Choose a new interval unit before entering how often maintenance repeats
-                while True:
-                    print("\nSelect maintenance interval unit:")
-                    print("1. Days")
-                    print("2. Months")
-                    print("3. Years")
+                    interval = updated_schedule["maintenance_interval"]
+                    unit = updated_schedule["interval_unit"]
 
-                    unit_choice = input("Enter your choice: ").strip()
+                    if unit == "Days":
+                        next_date = last_date + timedelta(days=interval)
 
-                    if unit_choice == "1":
-                        interval_unit = "Days"
-                        break
-                    elif unit_choice == "2":
-                        interval_unit = "Months"
-                        break
-                    elif unit_choice == "3":
-                        interval_unit = "Years"
-                        break
-                    else:
-                        print("Invalid choice. Please select 1, 2, or 3.")
+                    elif unit == "Months":
+                        next_date = last_date + relativedelta(months=interval)
 
-                # Make sure the new interval is a valid positive whole number
-                while True:
-                    new_interval = input(
-                        f"Enter maintenance interval ({interval_unit}): "
-                    ).strip()
+                    elif unit == "Years":
+                        next_date = last_date + relativedelta(years=interval)
 
-                    try:
-                        new_interval = int(new_interval)
+                    updated_schedule["next_maintenance_date"] = (
+                        next_date.strftime("%Y-%m-%d")
+                    )
 
-                        if new_interval <= 0:
-                            print("Maintenance interval must be greater than zero.")
-                            continue
+                    # Save the completed schedule update to JSON
+                    schedule.update(updated_schedule)
 
-                        break
+                    with open("maintenance_schedule.json", "w") as file:
+                        json.dump(maintenance_schedule_list, file, indent=4)
 
-                    except ValueError:
-                        print("Invalid interval. Please enter a whole number.")
+                    print("Maintenance schedule updated successfully!")
+                    print(
+                        "Next maintenance date:",
+                        schedule["next_maintenance_date"]
+                    )
+                    return
 
-                schedule["maintenance_interval"] = new_interval
-                schedule["interval_unit"] = interval_unit
+                elif choice == "5":
+                    # Discard the proposed changes
+                    print("Update canceled. No changes were saved.")
+                    return
 
-            else:
-                print("Invalid choice. Please try again.")
-                return
+                else:
+                    print("Invalid choice. Please select 1 to 5.")
 
-            # Recalculate the next maintenance date after updating the schedule
-            last_date = datetime.strptime(
-                schedule["last_maintenance_date"], "%Y-%m-%d"
-            )
+                print("\nCurrent changes:")
+                print(updated_schedule)
 
-            interval = schedule["maintenance_interval"]
-            unit = schedule["interval_unit"]
-
-            if unit == "Days":
-                next_date = last_date + timedelta(days=interval)
-
-            elif unit == "Months":
-                next_date = last_date + relativedelta(months=interval)
-
-            elif unit == "Years":
-                next_date = last_date + relativedelta(years=interval)
-
-            schedule["next_maintenance_date"] = next_date.strftime("%Y-%m-%d")
-
-            # Save the changes so the updated schedule remains after restarting
-            with open("maintenance_schedule.json", "w") as file:
-                json.dump(maintenance_schedule_list, file, indent=4)
-
-            print("Maintenance schedule updated successfully!")
-            print("Next maintenance date:", schedule["next_maintenance_date"])
             return
 
-    if not found:
-        print("Maintenance schedule not found. Please check the schedule ID.")
+    print("Maintenance schedule not found. Please check the schedule ID.")
 
 # Remove a maintenance schedule after confirming the user's choice
 def delete_maintenance_schedule():
@@ -1145,7 +1183,7 @@ def view_maintenance_history():
 
         print("------------------------------")
 
-# Find a maintenance history record and allow its details to be updated
+# Update several maintenance history details before saving
 def update_maintenance_history():
     history_id = input("Enter maintenance history ID to update: ").strip()
 
@@ -1154,7 +1192,9 @@ def update_maintenance_history():
             print("Maintenance history found!")
             print(history)
 
-            # Keep showing the update menu until the user chooses to finish
+            # Work with a copy until the user chooses to save
+            updated_history = history.copy()
+
             while True:
                 print("\nWhat would you like to update?")
                 print("1. Maintenance Date")
@@ -1163,69 +1203,71 @@ def update_maintenance_history():
                 print("4. Parts Replaced")
                 print("5. Maintenance Cost Currency")
                 print("6. Maintenance Cost")
-                print("7. Finish Updating")
+                print("7. Save Changes")
+                print("8. Cancel")
 
                 choice = input("Enter your choice: ").strip()
 
                 if choice == "1":
-                    # Check the new maintenance date before saving it
+                    # Validate the maintenance date before changing it
+                    date_formats = [
+                        "%Y-%m-%d", "%d-%m-%Y", "%m-%d-%Y",
+                        "%Y/%m/%d", "%d/%m/%Y", "%m/%d/%Y"
+                    ]
+
                     while True:
                         new_date = input(
-                            "Enter new maintenance date (e.g. 19/11/2026 or 2026-11-19): "
+                            "Enter new maintenance date: "
                         ).strip()
 
-                        date_formats = [
-                            "%Y-%m-%d",
-                            "%d-%m-%Y",
-                            "%m-%d-%Y",
-                            "%Y/%m/%d",
-                            "%d/%m/%Y",
-                            "%m/%d/%Y"
-                        ]
-
-                        date = None
+                        parsed_date = None
 
                         for date_format in date_formats:
                             try:
-                                date = datetime.strptime(new_date, date_format)
+                                parsed_date = datetime.strptime(
+                                    new_date, date_format
+                                )
                                 break
-
                             except ValueError:
                                 continue
 
-                        if date is None:
-                            print("Invalid date. Please enter a valid date.")
+                        if parsed_date is None:
+                            print("Invalid date. Please try again.")
                             continue
 
-                        history["maintenance_date"] = date.strftime("%Y-%m-%d")
+                        updated_history["maintenance_date"] = (
+                            parsed_date.strftime("%Y-%m-%d")
+                        )
                         break
 
                 elif choice == "2":
-                    new_value = input(
+                    # Fault description may be left empty
+                    updated_history["fault_description"] = input(
                         "Enter fault description (press Enter if none): "
                     ).strip()
-                    history["fault_description"] = new_value
 
                 elif choice == "3":
-                    # Work performed cannot be empty because it explains the maintenance carried out
+                    # Keep the original validation for work performed
                     while True:
-                        new_value = input("Enter work performed: ").strip()
+                        new_value = input(
+                            "Enter work performed: "
+                        ).strip()
 
-                        if new_value == "":
+                        if not new_value:
                             print("Work description cannot be empty.")
                             continue
 
-                        history["work_performed"] = new_value
+                        updated_history["work_performed"] = new_value
                         break
 
                 elif choice == "4":
-                    new_value = input(
+                    # Parts replaced may be left empty
+                    updated_history["parts_replaced"] = input(
                         "Enter parts replaced (press Enter if none): "
                     ).strip()
-                    history["parts_replaced"] = new_value
 
                 elif choice == "5":
-                    # Allow the maintenance cost currency to be changed
+                    # Allow GBP, USD or NGN as the maintenance cost currency
                     while True:
                         print("\nSelect maintenance cost currency:")
                         print("1. GBP (£)")
@@ -1234,27 +1276,30 @@ def update_maintenance_history():
 
                         currency_choice = input("Enter your choice: ").strip()
 
-                        if currency_choice == "1":
-                            history["maintenance_cost_currency"] = "GBP"
+                        currencies = {
+                            "1": "GBP",
+                            "2": "USD",
+                            "3": "NGN"
+                        }
+
+                        if currency_choice in currencies:
+                            updated_history["maintenance_cost_currency"] = (
+                                currencies[currency_choice]
+                            )
                             break
-                        elif currency_choice == "2":
-                            history["maintenance_cost_currency"] = "USD"
-                            break
-                        elif currency_choice == "3":
-                            history["maintenance_cost_currency"] = "NGN"
-                            break
-                        else:
-                            print("Invalid currency. Please select 1, 2, or 3.")
+
+                        print("Invalid currency. Please select 1, 2 or 3.")
 
                 elif choice == "6":
-                    currency = history.get("maintenance_cost_currency")
+                    currency = updated_history.get(
+                        "maintenance_cost_currency"
+                    )
 
-                    # A currency must be selected before entering the maintenance cost
+                    # A currency is required before entering a cost
                     if currency is None:
                         print("Please select a maintenance cost currency first.")
                         continue
 
-                    # Accept only a valid cost that is zero or greater
                     while True:
                         new_cost = input(
                             f"Enter new maintenance cost ({currency}): "
@@ -1267,25 +1312,34 @@ def update_maintenance_history():
                                 print("Maintenance cost cannot be negative.")
                                 continue
 
-                            history["maintenance_cost"] = new_cost
+                            updated_history["maintenance_cost"] = new_cost
                             break
 
                         except ValueError:
                             print("Invalid cost. Please enter a number.")
 
                 elif choice == "7":
-                    print("Finished updating maintenance history.")
+                    # Save all updated history fields together
+                    history.update(updated_history)
+
+                    with open("maintenance_history.json", "w") as file:
+                        json.dump(maintenance_history_list, file, indent=4)
+
+                    print("Maintenance history updated successfully!")
+                    return
+
+                elif choice == "8":
+                    # Leave the original history record unchanged
+                    print("Update canceled. No changes were saved.")
                     return
 
                 else:
-                    print("Invalid choice. Please select an option from 1 to 7.")
-                    continue
+                    print("Invalid choice. Please select 1 to 8.")
 
-                # Save each change so the updated history is not lost
-                with open("maintenance_history.json", "w") as file:
-                    json.dump(maintenance_history_list, file, indent=4)
+                print("\nCurrent changes:")
+                print(updated_history)
 
-                print("Maintenance history updated successfully!")
+            return
 
     print("Maintenance history not found. Please check the history ID.")
     
