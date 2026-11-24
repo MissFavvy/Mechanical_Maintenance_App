@@ -1,40 +1,39 @@
 #AI PLUGIN WAS USED TO REVIEW THE CODE BLOCKS
 
-# Import the tools for building the GUI, reading JSON files and showing messages
+# Importing the libraries needed for the GUI, JSON files and date calculations
 import tkinter as tk
 import json
 from tkinter import ttk, messagebox
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
-# Load equipment records that were saved previously
+# Loading previously saved equipment records
 with open("equipment_data.json", "r") as file:
     equipment_list = json.load(file)
 
-# Retrieve the saved ID counters to avoid reusing previous IDs
+# Keeping track of the last used ID numbers to avoid repeating IDs
 with open("id_counters.json", "r") as file:
     id_counters = json.load(file)
 
-# Load the existing maintenance work orders
+# Loading previously saved work orders
 with open("work_orders.json", "r") as file:
     work_order_list = json.load(file)
 
-# Retrieve the saved preventive maintenance schedules
+# Loading previously saved maintenance schedules
 with open("maintenance_schedule.json", "r") as file:
     maintenance_schedule_list = json.load(file)
 
-# Load the equipment maintenance history records
+# Loading previously saved maintenance history
 with open("maintenance_history.json", "r") as file:
     maintenance_history_list = json.load(file)
 
-# Set up the main application window and its dimensions
+# Creating the main application window with its title and size
 root = tk.Tk()
 root.title("Mechanical Maintenance Management System")
 root.geometry("900x600")
 
-
 def open_equipment_window():
-    # Open a separate window for managing equipment records
+    # Creating a separate window for equipment management
     equipment_window = tk.Toplevel(root)
     equipment_window.title("Equipment Management")
     equipment_window.geometry("1000x650")
@@ -46,17 +45,17 @@ def open_equipment_window():
     )
     equipment_heading.pack(pady=15)
 
-    # Define the equipment details that appear as table columns
+    # Defining the column headings for the equipment table
     columns = (
         "ID", "Name", "Type", "Location",
         "Temperature", "Vibration", "Operating Hours"
     )
 
-    # Keep the equipment table and scrollbar together in one frame
+    # Keeping the table and scrollbar in the same frame
     table_frame = tk.Frame(equipment_window)
     table_frame.pack(fill=tk.BOTH, expand=True, padx=15, pady=10)
 
-    # Create a table for displaying registered equipment
+    # Creating a table for registered equipment
     equipment_table = ttk.Treeview(
         table_frame,
         columns=columns,
@@ -64,12 +63,12 @@ def open_equipment_window():
         height=10
     )
 
-    # Set the heading, width and alignment of each table column
+    # Setting the heading, width and alignment of each column
     for col in columns:
         equipment_table.heading(col, text=col)
         equipment_table.column(col, width=130, anchor="center")
 
-    # Add a scrollbar for navigating the equipment records
+    # Adding a scrollbar to view more equipment records
     scrollbar = ttk.Scrollbar(
         table_frame,
         orient=tk.VERTICAL,
@@ -81,11 +80,11 @@ def open_equipment_window():
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
     def display_equipment(records):
-        # Clear existing rows before displaying the requested records
+        # Clearing the table to avoid displaying duplicate records
         for item in equipment_table.get_children():
             equipment_table.delete(item)
 
-        # Insert equipment records with alternating row colours
+        # Displaying equipment records with alternating row colours
         for index, equipment in enumerate(records):
             row_tag = "evenrow" if index % 2 == 0 else "oddrow"
 
@@ -99,38 +98,38 @@ def open_equipment_window():
                 "null" if equipment["operating_hours"] is None else equipment["operating_hours"]
             ), tags=(row_tag,))
 
-    # Use alternating row colours to separate equipment records
+    # Alternating row colours for better readability
     equipment_table.tag_configure("evenrow", background="#FFFFFF")
     equipment_table.tag_configure("oddrow", background="#C5D3E0")
 
-    # Display all registered equipment when the window opens
+    # Displaying all saved equipment when the window opens
     display_equipment(equipment_list)
 
-    # Keep the equipment action buttons together on one row
+    # Keeping the equipment buttons on the same row
     equipment_button_frame = tk.Frame(equipment_window)
     equipment_button_frame.pack(pady=10)
 
-    # Reserve space for the selected equipment form
+    # Creating a space for the selected form
     form_container = tk.Frame(equipment_window)
     form_container.pack(fill=tk.X, padx=15, pady=5)
 
-    # Prepare separate forms for equipment registration and searching
+    # Creating separate forms for adding, searching, updating and deleting equipment
     add_equipment_frame = tk.Frame(form_container)
     search_equipment_frame = tk.Frame(form_container)
     update_equipment_frame = tk.Frame(form_container)
     delete_equipment_frame = tk.Frame(form_container)
 
-    # Track the form that is currently visible
+    # Keeping track of which form is currently open
     active_form = None
 
     def show_form(frame):
         nonlocal active_form
 
-        # Hide the current form before switching to another
+        # Hiding the current form before opening another
         if active_form is not None:
             active_form.pack_forget()
 
-        # Clicking the same button again hides its form
+        # Clicking the same button again closes the form
         if active_form == frame:
             active_form = None
         else:
@@ -138,26 +137,26 @@ def open_equipment_window():
             active_form = frame
 
     def show_add_equipment_form():
-        # Restore the full equipment table and toggle the registration form
+        # Displaying all equipment records before opening or closing the registration form
         display_equipment(equipment_list)
         show_form(add_equipment_frame)
 
     def show_search_equipment_form():
-        # Restore the full equipment table and toggle the search form
+        # Displaying all equipment records before opening or closing the search form
         display_equipment(equipment_list)
         show_form(search_equipment_frame)
 
     def show_update_equipment_form():
-        # Restore the equipment list and open the update form
+        # Restoring the equipment list before showing the update form
         display_equipment(equipment_list)
         show_form(update_equipment_frame)
 
     def show_delete_equipment_form():
-        # Restore the equipment list and open the deletion form
+        # Restoring the equipment list before showing the deletion form
         display_equipment(equipment_list)
         show_form(delete_equipment_frame)
 
-    # Provide input fields for the equipment details
+    # Creating input fields for entering equipment details
     name_label = tk.Label(
         add_equipment_frame,
         text="Equipment Name"
@@ -213,7 +212,7 @@ def open_equipment_window():
     operating_hours_entry.grid(row=3, column=2, padx=10, pady=5)
 
     def save_equipment():
-        # Read the entered details and remove unwanted spaces
+        # Getting the entered details and removing extra spaces
         equipment_name = name_entry.get().strip().title()
         equipment_type = type_entry.get().strip().title()
         equipment_location = location_entry.get().strip().title()
@@ -221,7 +220,7 @@ def open_equipment_window():
         vibration = vibration_entry.get().strip()
         operating_hours = operating_hours_entry.get().strip()
 
-        # Require a name, type and location before saving
+        # Making sure the name, type and location are not left empty
         if not equipment_name or not equipment_type or not equipment_location:
             messagebox.showwarning(
                 "Missing Information",
@@ -229,13 +228,13 @@ def open_equipment_window():
             )
             return
 
-        # Convert entered readings to numbers while allowing blank values
+        # Converting equipment readings to numbers and storing empty readings as None
         try:
             temperature = float(temperature) if temperature else None
             vibration = float(vibration) if vibration else None
             operating_hours = float(operating_hours) if operating_hours else None
 
-        # Warn the user when an equipment reading is not numeric
+        # Showing a warning when an invalid reading is entered
         except ValueError:
             messagebox.showwarning(
                 "Invalid Input",
@@ -243,14 +242,14 @@ def open_equipment_window():
             )
             return
 
-        # Read the latest counter before generating an equipment ID
+        # Loading the last used ID number before generating a new ID
         with open("id_counters.json", "r") as file:
             counters = json.load(file)
 
         next_number = counters["last_equipment_id"] + 1
         equipment_id = f"EQ{next_number:03d}"
 
-        # Check saved equipment IDs to prevent duplicates
+        # Checking existing equipment IDs to avoid duplicates
         with open("equipment_data.json", "r") as file:
             saved_equipment = json.load(file)
 
@@ -258,12 +257,12 @@ def open_equipment_window():
             equipment["id"] for equipment in saved_equipment
         }
 
-        # Increase the number until an unused equipment ID is available
+        # Increasing the ID number until an unused ID is found
         while equipment_id in existing_ids:
             next_number += 1
             equipment_id = f"EQ{next_number:03d}"
 
-        # Store the new equipment details in a dictionary
+        # Storing the new equipment details in a dictionary
         new_equipment = {
             "id": equipment_id,
             "name": equipment_name,
@@ -274,32 +273,32 @@ def open_equipment_window():
             "operating_hours": operating_hours
         }
 
-        # Append the new record and save the updated equipment list
+        # Adding the new equipment to the list and saving it to the JSON file
         saved_equipment.append(new_equipment)
 
         with open("equipment_data.json", "w") as file:
             json.dump(saved_equipment, file, indent=4)
 
-        # Save the latest ID number for future registrations
+        # Saving the last used ID number for the next registration
         counters["last_equipment_id"] = next_number
 
         with open("id_counters.json", "w") as file:
             json.dump(counters, file, indent=4)
 
-        # Synchronise the GUI equipment list with the saved records
+        # Updating the equipment list with the latest saved records
         equipment_list.clear()
         equipment_list.extend(saved_equipment)
 
-        # Refresh the table to show the newly registered equipment
+        # Refreshing the table to display the newly registered equipment
         display_equipment(equipment_list)
 
-        # Confirm successful equipment registration
+        # Showing a message after the equipment has been saved successfully
         messagebox.showinfo(
             "Success",
             f"Equipment {equipment_id} registered successfully."
         )
 
-        # Clear the form so another equipment record can be entered
+        # Clearing the input fields for the next equipment registration
         for entry in (
             name_entry,
             type_entry,
@@ -310,7 +309,7 @@ def open_equipment_window():
         ):
             entry.delete(0, tk.END)
 
-    # Connect the Save Equipment button to the registration function
+    # Linking the Save Equipment button to the registration function
     save_equipment_button = tk.Button(
         add_equipment_frame,
         text="Save Equipment",
@@ -319,7 +318,36 @@ def open_equipment_window():
     )
     save_equipment_button.grid(row=4, column=1, pady=15)
 
-    # Provide an entry field for searching by equipment ID
+    # Clearing the entered equipment details without saving
+    def cancel_equipment_registration():
+        for entry in (
+            name_entry,
+            type_entry,
+            location_entry,
+            temperature_entry,
+            vibration_entry,
+            operating_hours_entry
+        ):
+            entry.delete(0, tk.END)
+
+        display_equipment(equipment_list)
+        show_form(add_equipment_frame)
+
+        # Showing a message to confirm that no equipment was saved
+        messagebox.showinfo(
+            "Registration Canceled",
+            "Registration canceled. No equipment was saved.",
+            parent=equipment_window
+        )
+
+    tk.Button(
+        add_equipment_frame,
+        text="Cancel",
+        font=("Arial", 12),
+        command=cancel_equipment_registration
+    ).grid(row=4, column=2, pady=15)
+
+    # Creating an input field for the equipment ID to search for a specific equipment record
     search_label = tk.Label(
         search_equipment_frame,
         text="Enter Equipment ID",
@@ -331,10 +359,10 @@ def open_equipment_window():
     search_entry.grid(row=0, column=1, padx=10, pady=10)
 
     def search_equipment():
-        # Read the equipment ID entered for the search
+        # Getting the equipment ID entered by the user
         search_id = search_entry.get().strip()
 
-        # Prevent a search when no equipment ID is provided
+        # Checking that the equipment ID is not left empty
         if not search_id:
             messagebox.showwarning(
                 "Missing Information",
@@ -342,21 +370,21 @@ def open_equipment_window():
             )
             return
 
-        # Compare IDs without treating uppercase and lowercase letters differently
+        # Allowing both uppercase and lowercase letters when searching for equipment
         for equipment in equipment_list:
             if equipment["id"].casefold() == search_id.casefold():
 
-                # Show only the matching equipment record in the table
+                # Displaying only the equipment that matches the entered ID
                 display_equipment([equipment])
                 return
 
-        # Notify the user when the equipment ID cannot be found
+        # Showing a warning if the equipment is not found
         messagebox.showwarning(
             "Equipment Not Found",
             "Equipment not found. Please check the equipment ID."
         )
 
-    # Run the equipment search when the Search button is clicked
+    # Linking the Search button to the equipment search function
     search_button = tk.Button(
         search_equipment_frame,
         text="Search",
@@ -365,15 +393,27 @@ def open_equipment_window():
     )
     search_button.grid(row=0, column=2, padx=10, pady=10)
 
-    
-    # Create the form for finding equipment to update
+    # Clearing the search field and displaying all equipment records again
+    def cancel_equipment_search():
+        search_entry.delete(0, tk.END)
+        display_equipment(equipment_list)
+        show_form(search_equipment_frame)
+
+    tk.Button(
+        search_equipment_frame,
+        text="Cancel",
+        font=("Arial", 12),
+        command=cancel_equipment_search
+    ).grid(row=0, column=3, padx=10, pady=10)
+
+    # Creating a form for updating equipment details
     tk.Label(update_equipment_frame, text="Equipment ID").grid(
         row=0, column=0, padx=10, pady=5
     )
     update_id_entry = tk.Entry(update_equipment_frame)
     update_id_entry.grid(row=0, column=1, padx=10, pady=5)
 
-    # Prepare entry boxes for the equipment details
+    # Creating input fields for the details that can be updated
     update_fields = {}
     field_names = [
         ("name", "Equipment Name"),
@@ -407,7 +447,7 @@ def open_equipment_window():
             messagebox.showwarning("Missing Information", "Enter an equipment ID.")
             return
 
-        # Find the equipment without considering letter case
+        # Allowing both uppercase and lowercase letters when finding equipment to update
         for equipment in equipment_list:
             if equipment["id"].casefold() == search_id.casefold():
                 selected_equipment = equipment
@@ -417,7 +457,7 @@ def open_equipment_window():
             messagebox.showwarning("Not Found", "Equipment not found.")
             return
 
-        # Display the existing details for editing
+        # Filling the input fields with the previously saved equipment details
         for field, entry in update_fields.items():
             value = selected_equipment[field]
             entry.insert(0, "" if value is None else str(value))
@@ -433,7 +473,7 @@ def open_equipment_window():
 
         updated_values = {}
 
-        # Validate the required text fields
+        # Checking that the name, type and location are not left empty
         for field in ("name", "type", "location"):
             value = update_fields[field].get().strip().title()
 
@@ -446,7 +486,7 @@ def open_equipment_window():
 
             updated_values[field] = value
 
-        # Validate numeric readings while allowing blank values
+        # Checking that the readings are numbers and storing empty readings as None
         for field in ("temperature", "vibration", "operating_hours"):
             value = update_fields[field].get().strip()
 
@@ -459,7 +499,7 @@ def open_equipment_window():
                 )
                 return
 
-        # Reload the latest saved records before applying the update
+        # Loading the latest equipment records before saving changes
         with open("equipment_data.json", "r") as file:
             saved_equipment = json.load(file)
 
@@ -476,7 +516,7 @@ def open_equipment_window():
             selected_equipment = None
             return
 
-        # Save the changes and refresh the GUI records
+        # Saving the updated details to JSON and refreshing the equipment table
         with open("equipment_data.json", "w") as file:
             json.dump(saved_equipment, file, indent=4)
 
@@ -499,7 +539,33 @@ def open_equipment_window():
         command=save_equipment_update
     ).grid(row=7, column=1, pady=10)
 
-    # Set up the buttons for equipment management actions
+    # Clearing the entered changes without saving them
+    def cancel_equipment_update():
+        nonlocal selected_equipment
+
+        selected_equipment = None
+        update_id_entry.delete(0, tk.END)
+
+        for entry in update_fields.values():
+            entry.delete(0, tk.END)
+
+        display_equipment(equipment_list)
+        show_form(update_equipment_frame)
+
+        # Showing a message to confirm that no changes were saved
+        messagebox.showinfo(
+            "Update Canceled",
+            "Update canceled. No changes were saved.",
+            parent=equipment_window
+        )
+
+    tk.Button(
+        update_equipment_frame,
+        text="Cancel",
+        command=cancel_equipment_update
+    ).grid(row=7, column=2, padx=10, pady=10)
+
+    # Creating the buttons for adding, searching, updating and deleting equipment
     add_equipment_button = tk.Button(
         equipment_button_frame,
         text="Add Equipment",
@@ -537,7 +603,7 @@ def open_equipment_window():
     delete_equipment_button.pack(side=tk.LEFT, padx=5)
 
 
-    # Set up the form for deleting an equipment record
+    # Creating a form for deleting equipment
     tk.Label(delete_equipment_frame, text="Equipment ID").grid(
         row=0, column=0, padx=10, pady=10
     )
@@ -552,7 +618,7 @@ def open_equipment_window():
             messagebox.showwarning("Missing Information", "Enter an equipment ID.")
             return
 
-        # Read the latest equipment records before deletion
+        # Loading the latest saved equipment records before deletion
         with open("equipment_data.json", "r") as file:
             saved_equipment = json.load(file)
 
@@ -567,7 +633,7 @@ def open_equipment_window():
             messagebox.showwarning("Not Found", "Equipment not found.")
             return
 
-        # Check for records linked to the selected equipment
+        # Checking for maintenance records linked to the selected equipment
         with open("work_orders.json", "r") as file:
             saved_work_orders = json.load(file)
 
@@ -579,25 +645,25 @@ def open_equipment_window():
 
         equipment_id = equipment_to_delete["id"]
 
-        # Identify any work orders linked to the equipment
+        # Checking if the equipment has any existing work orders
         has_work_order = any(
             order["equipment_id"].casefold() == equipment_id.casefold()
             for order in saved_work_orders
         )
 
-        # Identify any maintenance schedules linked to the equipment
+        # Checking if the equipment has any existing maintenance schedules
         has_maintenance_schedule = any(
             schedule["equipment_id"].casefold() == equipment_id.casefold()
             for schedule in saved_schedules
         )
 
-        # Identify any maintenance history linked to the equipment
+        # Checking if the equipment has any existing maintenance history
         has_maintenance_history = any(
             history["equipment_id"].casefold() == equipment_id.casefold()
             for history in saved_history
         )
 
-        # Prevent deletion if the equipment has related maintenance records
+        # Preventing equipment deletion when there are linked maintenance records
         if has_work_order or has_maintenance_schedule or has_maintenance_history:
             reasons = []
 
@@ -617,7 +683,7 @@ def open_equipment_window():
             )
             return
 
-        # Ask for confirmation before permanently removing the record
+        # Asking the user to confirm before permanently deleting the equipment
         confirmation = messagebox.askyesno(
             "Confirm Deletion",
             f"Delete {equipment_to_delete['id']} - {equipment_to_delete['name']}?"
@@ -628,7 +694,7 @@ def open_equipment_window():
 
         saved_equipment.remove(equipment_to_delete)
 
-        # Save the remaining equipment records to JSON
+        # Saving the remaining equipment records to the JSON file
         with open("equipment_data.json", "w") as file:
             json.dump(saved_equipment, file, indent=4)
 
@@ -645,9 +711,27 @@ def open_equipment_window():
         command=delete_equipment
     ).grid(row=1, column=1, pady=10)
 
+    # Canceling the deletion and displaying all equipment records again
+    def cancel_equipment_deletion():
+        delete_id_entry.delete(0, tk.END)
+        display_equipment(equipment_list)
+        show_form(delete_equipment_frame)
+
+        # Showing a message to confirm that no equipment was deleted
+        messagebox.showinfo(
+            "Deletion Canceled",
+            "Deletion canceled. No equipment was deleted.",
+            parent=equipment_window
+        )
+
+    tk.Button(
+        delete_equipment_frame,
+        text="Cancel",
+        command=cancel_equipment_deletion
+    ).grid(row=1, column=2, padx=10, pady=10)
 
 def open_work_order_window():
-    # Open the window for managing maintenance work orders
+    # Creating a separate window for managing work orders
     work_order_window = tk.Toplevel(root)
     work_order_window.title("Work Orders")
     work_order_window.geometry("1200x650")
@@ -658,7 +742,7 @@ def open_work_order_window():
         font=("Arial", 16, "bold")
     ).pack(pady=15)
 
-    # Set up the work order table
+    # Creating a table to display work order details
     columns = (
         "Work Order ID", "Equipment ID", "Fault Description",
         "Priority", "Status"
@@ -678,7 +762,7 @@ def open_work_order_window():
         work_order_table.heading(column, text=column)
         work_order_table.column(column, width=180, anchor="center")
 
-    # Add a scrollbar for viewing all work orders
+    # Adding a scrollbar to view more work orders
     scrollbar = ttk.Scrollbar(
         table_frame,
         orient=tk.VERTICAL,
@@ -689,12 +773,12 @@ def open_work_order_window():
     work_order_table.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-    # Use the same alternating colours as the equipment table
+    # Maintaining the same row colours as the equipment table
     work_order_table.tag_configure("evenrow", background="#FFFFFF")
     work_order_table.tag_configure("oddrow", background="#C5D3E0")
 
     def load_work_orders():
-        # Read the latest work orders from JSON
+        # Loading the latest saved work orders from the JSON file
         with open("work_orders.json", "r") as file:
             records = json.load(file)
 
@@ -703,7 +787,7 @@ def open_work_order_window():
         return records
 
     def display_work_orders(records):
-        # Clear old rows before displaying the requested records
+        # Clearing the table to avoid displaying duplicate records
         for item in work_order_table.get_children():
             work_order_table.delete(item)
 
@@ -719,16 +803,16 @@ def open_work_order_window():
             ), tags=(row_tag,))
 
     def refresh_work_orders():
-        # Reload all work orders and refresh the table
+        # Refreshing the table with the latest saved work orders
         display_work_orders(load_work_orders())
 
     refresh_work_orders()
 
-    # Keep the work order action buttons together
+    # Keeping the work order buttons on the same row
     button_frame = tk.Frame(work_order_window)
     button_frame.pack(pady=10)
 
-    # Show only one work order form at a time
+    # Displaying only one work order form at a time
     form_container = tk.Frame(work_order_window)
     form_container.pack(fill=tk.X, padx=15, pady=5)
 
@@ -767,8 +851,8 @@ def open_work_order_window():
         refresh_work_orders()
         show_form(delete_frame)
 
-    # Create the buttons for managing work orders
-    # Work orders are already displayed automatically in the table
+    # Creating the buttons for managing work orders
+    # All saved work orders are displayed when the window opens
     actions = (
         ("Create Work Order", show_create_form),
         ("Search Work Order", show_search_form),
@@ -786,7 +870,7 @@ def open_work_order_window():
         ).pack(side=tk.LEFT, padx=4)
 
     def add_field(frame, label, row):
-        # Create a labelled input field
+        # Creating reusable input fields with their labels
         tk.Label(frame, text=label).grid(
             row=row, column=0, padx=10, pady=6, sticky="e"
         )
@@ -795,7 +879,7 @@ def open_work_order_window():
         return entry
 
     def equipment_exists(equipment_id):
-        # Confirm that the equipment is registered
+        # Checking that the equipment is already registered
         with open("equipment_data.json", "r") as file:
             records = json.load(file)
 
@@ -805,7 +889,7 @@ def open_work_order_window():
         )
 
     def linked_history_exists(work_order_id):
-        # Check whether a work order has maintenance history
+        # Checking if the work order has linked maintenance history
         with open("maintenance_history.json", "r") as file:
             records = json.load(file)
 
@@ -833,7 +917,7 @@ def open_work_order_window():
     priority_choice.grid(row=2, column=1, padx=10, pady=6)
 
     def create_work_order_gui():
-        # Read and validate the work order details
+        # Getting the entered work order details and checking for missing information
         fault = fault_entry.get().strip()
         equipment_id = equipment_entry.get().strip().upper()
         priority = priority_choice.get().strip()
@@ -852,7 +936,7 @@ def open_work_order_window():
             )
             return
 
-        # Read the latest counter and generate an unused work order ID
+        # Generating a new work order ID without repeating existing IDs
         with open("id_counters.json", "r") as file:
             counters = json.load(file)
 
@@ -878,7 +962,7 @@ def open_work_order_window():
         orders.append(new_order)
         counters["last_work_order_id"] = next_number
 
-        # Save the work order and its ID counter
+        # Saving the new work order and the last used ID number
         with open("work_orders.json", "w") as file:
             json.dump(orders, file, indent=4)
 
@@ -902,12 +986,34 @@ def open_work_order_window():
         command=create_work_order_gui
     ).grid(row=3, column=1, pady=12)
 
+    # Clearing the entered work order details without saving
+    def cancel_work_order_creation():
+        fault_entry.delete(0, tk.END)
+        equipment_entry.delete(0, tk.END)
+        priority_choice.set("")
+
+        refresh_work_orders()
+        show_form(create_frame)
+
+        # Showing a message to confirm that no work order was saved
+        messagebox.showinfo(
+            "Creation Canceled",
+            "Creation canceled. No work order was saved.",
+            parent=work_order_window
+        )
+
+    tk.Button(
+        create_frame,
+        text="Cancel",
+        command=cancel_work_order_creation
+    ).grid(row=3, column=2, padx=10, pady=12)
+
     # ---------------- SEARCH WORK ORDER ----------------
 
     search_entry = add_field(search_frame, "Work Order ID", 0)
 
     def search_work_order_gui():
-        # Search without considering uppercase or lowercase letters
+        # Allowing both uppercase and lowercase letters when searching for a work order
         search_id = search_entry.get().strip()
 
         if not search_id:
@@ -930,6 +1036,18 @@ def open_work_order_window():
         text="Search",
         command=search_work_order_gui
     ).grid(row=1, column=1, pady=10)
+
+    # Clearing the search field and displaying all work orders again
+    def cancel_work_order_search():
+        search_entry.delete(0, tk.END)
+        refresh_work_orders()
+        show_form(search_frame)
+
+    tk.Button(
+        search_frame,
+        text="Cancel",
+        command=cancel_work_order_search
+    ).grid(row=1, column=2, padx=10, pady=10)
 
     # ---------------- UPDATE WORK ORDER ----------------
 
@@ -983,7 +1101,7 @@ def open_work_order_window():
         for order in load_work_orders():
             if order["id"].casefold() == search_id.casefold():
 
-                # Protect completed work orders with linked history
+                # Preventing changes to completed work orders with linked maintenance history
                 if (
                     order["status"].casefold() == "completed"
                     and linked_history_exists(order["id"])
@@ -1022,7 +1140,7 @@ def open_work_order_window():
         priority = update_priority.get().strip()
         status = update_status.get().strip()
 
-        # Validate all fields before changing the work order
+        # Checking that all required details have been entered before saving changes
         if not fault or not equipment_id or not priority or not status:
             messagebox.showwarning(
                 "Missing Information", "All work order fields are required."
@@ -1062,7 +1180,7 @@ def open_work_order_window():
             selected_work_order_id = None
             return
 
-        # Check again before saving to protect linked history
+        # Checking again for linked maintenance history before saving changes
         if (
             selected_order["status"].casefold() == "completed"
             and linked_history_exists(selected_order["id"])
@@ -1073,13 +1191,13 @@ def open_work_order_window():
             )
             return
 
-        # Check whether this update completes the work order
+        # Checking if the work order status is being changed to Completed
         completing_order = (
             status == "Completed"
             and selected_order["status"].casefold() != "completed"
         )
 
-        # Apply the validated changes
+        # Updating the work order with the checked details
         selected_order.update({
             "fault_description": fault,
             "equipment_id": equipment_id,
@@ -1087,7 +1205,9 @@ def open_work_order_window():
             "status": status
         })
 
-        # Create maintenance history automatically when completed
+        history_id = None
+
+        # Automatically creating a maintenance history record when a work order is completed
         if completing_order and not linked_history_exists(selected_order["id"]):
             with open("maintenance_history.json", "r") as file:
                 history_records = json.load(file)
@@ -1106,7 +1226,7 @@ def open_work_order_window():
                 next_number += 1
                 history_id = f"MH{next_number:03d}"
 
-            # Use the same history fields as main.py
+            # Maintaining the same maintenance history structure as main.py
             history_records.append({
                 "id": history_id,
                 "work_order_id": selected_order["id"],
@@ -1127,16 +1247,29 @@ def open_work_order_window():
             with open("id_counters.json", "w") as file:
                 json.dump(counters, file, indent=4)
 
-        # Save the updated work order details
+        # Saving the updated work order details to the JSON file
         with open("work_orders.json", "w") as file:
             json.dump(orders, file, indent=4)
 
         refresh_work_orders()
         selected_work_order_id = None
 
-        messagebox.showinfo(
-            "Success", "Work order updated successfully."
-        )
+        # Informing the user when a maintenance history record has been created automatically
+        if history_id is not None:
+            messagebox.showinfo(
+                "Success",
+                "Work order updated successfully.\n\n"
+                f"Maintenance history {history_id} was created automatically.\n\n"
+                "Go to Update Maintenance History to enter the work performed, "
+                "parts replaced, maintenance cost and currency.",
+                parent=work_order_window
+            )
+        else:
+            messagebox.showinfo(
+                "Success",
+                "Work order updated successfully.",
+                parent=work_order_window
+            )
 
     tk.Button(
         update_frame,
@@ -1150,12 +1283,41 @@ def open_work_order_window():
         command=save_work_order_update
     ).grid(row=5, column=1, pady=12)
 
+    # Clearing the entered work order changes without saving
+    def cancel_work_order_update():
+        nonlocal selected_work_order_id
+
+        selected_work_order_id = None
+        update_id_entry.delete(0, tk.END)
+
+        for entry in update_fields.values():
+            entry.delete(0, tk.END)
+
+        update_priority.set("")
+        update_status.set("")
+
+        refresh_work_orders()
+        show_form(update_frame)
+
+        # Showing a message to confirm that no changes were saved
+        messagebox.showinfo(
+            "Update Canceled",
+            "Update canceled. No changes were saved.",
+            parent=work_order_window
+        )
+
+    tk.Button(
+        update_frame,
+        text="Cancel",
+        command=cancel_work_order_update
+    ).grid(row=5, column=2, padx=10, pady=12)
+
     # ---------------- DELETE WORK ORDER ----------------
 
     delete_id_entry = add_field(delete_frame, "Work Order ID", 0)
 
     def delete_work_order_gui():
-        # Find the work order before attempting deletion
+        # Finding the work order that matches the entered ID
         delete_id = delete_id_entry.get().strip()
 
         if not delete_id:
@@ -1176,7 +1338,7 @@ def open_work_order_window():
             messagebox.showwarning("Not Found", "Work order not found.")
             return
 
-        # Do not delete work orders linked to maintenance history
+        # Preventing deletion of work orders with linked maintenance history
         if linked_history_exists(order_to_delete["id"]):
             messagebox.showwarning(
                 "Deletion Not Allowed",
@@ -1185,7 +1347,7 @@ def open_work_order_window():
             )
             return
 
-        # Ask for confirmation before permanently deleting
+        # Asking the user to confirm before permanently deleting the work order
         confirmation = messagebox.askyesno(
             "Confirm Deletion",
             f"Are you sure you want to delete {order_to_delete['id']}?"
@@ -1212,8 +1374,29 @@ def open_work_order_window():
         command=delete_work_order_gui
     ).grid(row=1, column=1, pady=10)
 
+    # Canceling the deletion without removing the work order
+    def cancel_work_order_deletion():
+        delete_id_entry.delete(0, tk.END)
+
+        # Displaying all work orders again and closing the deletion form
+        refresh_work_orders()
+        show_form(delete_frame)
+
+        # Showing a message to confirm that no work order was deleted
+        messagebox.showinfo(
+            "Deletion Canceled",
+            "Deletion canceled. No work order was deleted.",
+            parent=work_order_window
+        )
+
+    tk.Button(
+        delete_frame,
+        text="Cancel",
+        command=cancel_work_order_deletion
+    ).grid(row=1, column=2, padx=10, pady=10)
+
 def open_schedule_window():
-    # Open the maintenance scheduling window
+    # Creating a separate window for maintenance scheduling
     schedule_window = tk.Toplevel(root)
     schedule_window.title("Maintenance Scheduling")
     schedule_window.geometry("1000x650")
@@ -1224,7 +1407,7 @@ def open_schedule_window():
         font=("Arial", 16, "bold")
     ).pack(pady=15)
 
-    # Create the table to display maintenance schedules
+    # Creating a table for displaying maintenance schedules
     columns = (
         "Schedule ID",
         "Equipment ID",
@@ -1264,7 +1447,7 @@ def open_schedule_window():
     schedule_table.tag_configure("evenrow", background="#FFFFFF")
     schedule_table.tag_configure("oddrow", background="#C5D3E0")
 
-    # Load and save maintenance schedules
+    # Loading and saving maintenance schedules using JSON files
     def load_schedules():
         with open("maintenance_schedule.json", "r") as file:
             return json.load(file)
@@ -1273,7 +1456,7 @@ def open_schedule_window():
         with open("maintenance_schedule.json", "w") as file:
             json.dump(records, file, indent=4)
 
-    # Determine the current maintenance status
+    # Comparing the next maintenance date with today's date to determine its status
     def maintenance_status(next_date):
         today = datetime.today().date()
         due_date = datetime.strptime(next_date, "%Y-%m-%d").date()
@@ -1285,7 +1468,7 @@ def open_schedule_window():
         else:
             return "Upcoming"
 
-    # Display maintenance schedules automatically
+    # Displaying saved maintenance schedules in the table
     def display_schedules(records):
         for item in schedule_table.get_children():
             schedule_table.delete(item)
@@ -1313,7 +1496,7 @@ def open_schedule_window():
 
     refresh_schedules()
 
-    # Check that equipment is registered
+    # Checking that the equipment is already registered
     def equipment_exists(equipment_id):
         with open("equipment_data.json", "r") as file:
             equipment_records = json.load(file)
@@ -1324,7 +1507,7 @@ def open_schedule_window():
 
         return False
 
-    # Accept the six date formats supported by main.py
+    # Allowing the same six date formats as main.py
     def validate_date(value):
         date_formats = (
             "%Y-%m-%d",
@@ -1344,7 +1527,7 @@ def open_schedule_window():
 
         return None
 
-    # Calculate the next maintenance date
+    # Calculating the next maintenance date based on the selected interval and unit
     def calculate_next_date(last_date, interval, unit):
         date = datetime.strptime(last_date, "%Y-%m-%d")
 
@@ -1357,7 +1540,7 @@ def open_schedule_window():
 
         return next_date.strftime("%Y-%m-%d")
 
-    # Validate maintenance schedule details
+    # Checking the entered maintenance details before saving
     def validate_schedule(task, date_text, interval_text, unit):
         if not task or not date_text or not interval_text or not unit:
             messagebox.showwarning(
@@ -1403,7 +1586,7 @@ def open_schedule_window():
 
         return last_date, interval, next_date
 
-    # Create buttons and an area for the forms
+    # Creating a space for the buttons and maintenance schedule forms
     button_frame = tk.Frame(schedule_window)
     button_frame.pack(pady=10)
 
@@ -1461,7 +1644,7 @@ def open_schedule_window():
             font=("Arial", 10)
         ).pack(side=tk.LEFT, padx=5)
 
-    # Create labelled entry fields
+    # Creating reusable input fields with their labels
     def add_field(frame, label, row):
         tk.Label(
             frame,
@@ -1473,7 +1656,7 @@ def open_schedule_window():
 
         return entry
 
-    # Create a dropdown for interval units
+    # Providing a dropdown for selecting Days, Months or Years
     def add_unit_field(frame, row):
         tk.Label(
             frame,
@@ -1530,7 +1713,7 @@ def open_schedule_window():
 
         last_date, interval, next_date = validated
 
-        # Generate the next schedule ID
+        # Generating a new maintenance schedule ID without repeating existing IDs
         with open("id_counters.json", "r") as file:
             counters = json.load(file)
 
@@ -1560,7 +1743,7 @@ def open_schedule_window():
         schedules.append(new_schedule)
         counters["last_schedule_id"] = next_number
 
-        # Save schedule and counter
+        # Saving the maintenance schedule and the last used ID number
         save_schedules(schedules)
 
         with open("id_counters.json", "w") as file:
@@ -1575,7 +1758,7 @@ def open_schedule_window():
             parent=schedule_window
         )
 
-        # Clear the create form
+        # Clearing the input fields for the next maintenance schedule
         create_equipment.delete(0, tk.END)
         create_task.delete(0, tk.END)
         create_date.delete(0, tk.END)
@@ -1587,6 +1770,35 @@ def open_schedule_window():
         text="Save Schedule",
         command=create_schedule_gui
     ).grid(row=5, column=1, pady=12)
+
+    # Clearing the entered maintenance schedule details without saving
+    def cancel_schedule_creation():
+        for entry in (
+            create_equipment,
+            create_task,
+            create_date,
+            create_interval
+        ):
+            entry.delete(0, tk.END)
+
+        create_unit.set("")
+
+        # Displaying all saved schedules again and closing the form
+        refresh_schedules()
+        show_form(create_frame)
+
+        # Showing a message to confirm that no maintenance schedule was saved
+        messagebox.showinfo(
+            "Creation Canceled",
+            "Creation canceled. No schedule was saved.",
+            parent=schedule_window
+        )
+
+    tk.Button(
+        create_frame,
+        text="Cancel",
+        command=cancel_schedule_creation
+    ).grid(row=5, column=2, padx=10, pady=12)
 
     # ---------------- SEARCH MAINTENANCE SCHEDULE ----------------
 
@@ -1621,6 +1833,18 @@ def open_schedule_window():
         text="Search",
         command=search_schedule_gui
     ).grid(row=1, column=1, pady=10)
+
+    # Clearing the search field and displaying all maintenance schedules again
+    def cancel_schedule_search():
+        search_entry.delete(0, tk.END)
+        refresh_schedules()
+        show_form(search_frame)
+
+    tk.Button(
+        search_frame,
+        text="Cancel",
+        command=cancel_schedule_search
+    ).grid(row=1, column=2, padx=10, pady=10)
 
     # ---------------- UPDATE MAINTENANCE SCHEDULE ----------------
 
@@ -1659,7 +1883,7 @@ def open_schedule_window():
             if schedule["id"].casefold() == schedule_id.casefold():
                 selected_schedule_id = schedule["id"]
 
-                # Fill the form with existing details
+                # Filling the input fields with the previously saved maintenance details
                 update_task.delete(0, tk.END)
                 update_task.insert(0, schedule["maintenance_task"])
 
@@ -1723,7 +1947,7 @@ def open_schedule_window():
             selected_schedule_id = None
             return
 
-        # Save changes together and recalculate next maintenance
+        # Saving the updated schedule details along with the recalculated maintenance date
         selected_schedule["maintenance_task"] = task
         selected_schedule["last_maintenance_date"] = last_date
         selected_schedule["maintenance_interval"] = interval
@@ -1746,10 +1970,13 @@ def open_schedule_window():
     def cancel_schedule_update():
         nonlocal selected_schedule_id
 
-        # Discard unsaved changes
+        # Clearing the entered changes without saving them
         selected_schedule_id = None
         clear_update_form()
+
+        # Displaying all maintenance schedules again and closing the update form
         refresh_schedules()
+        show_form(update_frame)
 
         messagebox.showinfo(
             "Update Canceled",
@@ -1833,21 +2060,647 @@ def open_schedule_window():
         command=delete_schedule_gui
     ).grid(row=1, column=1, pady=10)
 
+    # Canceling the deletion without removing the maintenance schedule
+    def cancel_schedule_deletion():
+        delete_id.delete(0, tk.END)
+
+        # Displaying all maintenance schedules again and closing the deletion form
+        refresh_schedules()
+        show_form(delete_frame)
+
+        # Showing a message to confirm that no maintenance schedule was deleted
+        messagebox.showinfo(
+            "Deletion Canceled",
+            "Deletion canceled. No schedule was deleted.",
+            parent=schedule_window
+        )
+
+    tk.Button(
+        delete_frame,
+        text="Cancel",
+        command=cancel_schedule_deletion
+    ).grid(row=1, column=2, padx=10, pady=10)
+
 def open_history_window():
-    # Open the maintenance history window
+    # Creating a separate window for maintenance history
     history_window = tk.Toplevel(root)
     history_window.title("Maintenance History")
-    history_window.geometry("800x500")
+    history_window.geometry("2000x850")
 
-    history_heading = tk.Label(
+    tk.Label(
         history_window,
         text="Maintenance History",
         font=("Arial", 16, "bold")
+    ).pack(pady=15)
+
+    # Creating a table for displaying maintenance history records
+    columns = (
+        "History ID",
+        "Work Order ID",
+        "Equipment ID",
+        "Maintenance Date",
+        "Fault Description",
+        "Work Performed",
+        "Parts Replaced",
+        "Currency",
+        "Cost"
     )
-    history_heading.pack(pady=20)
 
+    table_frame = tk.Frame(history_window)
+    table_frame.pack(fill=tk.BOTH, padx=15, pady=10)
 
-# Display the application name on the main window
+    table = ttk.Treeview(
+        table_frame,
+        columns=columns,
+        show="headings",
+        height=9
+    )
+
+    widths = (100, 110, 110, 130, 200, 230, 170, 90, 110)
+
+    for column, width in zip(columns, widths):
+        table.heading(column, text=column)
+        table.column(column, width=width, anchor="center")
+
+    vertical_scrollbar = ttk.Scrollbar(
+        table_frame,
+        orient=tk.VERTICAL,
+        command=table.yview
+    )
+
+    horizontal_scrollbar = ttk.Scrollbar(
+        table_frame,
+        orient=tk.HORIZONTAL,
+        command=table.xview
+    )
+
+    table.configure(
+        yscrollcommand=vertical_scrollbar.set,
+        xscrollcommand=horizontal_scrollbar.set
+    )
+
+    table.grid(row=0, column=0, sticky="nsew")
+    vertical_scrollbar.grid(row=0, column=1, sticky="ns")
+    horizontal_scrollbar.grid(row=1, column=0, sticky="ew")
+
+    table_frame.columnconfigure(0, weight=1)
+    table_frame.rowconfigure(0, weight=1)
+
+    table.tag_configure("evenrow", background="#FFFFFF")
+    table.tag_configure("oddrow", background="#C5D3E0")
+
+    # Loading previously saved maintenance history records from the JSON file
+    def load_history():
+        with open("maintenance_history.json", "r") as file:
+            return json.load(file)
+
+    # Saving maintenance history records to the JSON file
+    def save_history(records):
+        with open("maintenance_history.json", "w") as file:
+            json.dump(records, file, indent=4)
+
+    # Displaying maintenance history records in the table
+    def display_history(records):
+        for item in table.get_children():
+            table.delete(item)
+
+        for index, history in enumerate(records):
+            row_tag = "evenrow" if index % 2 == 0 else "oddrow"
+
+            work_order_id = history.get("work_order_id")
+            if not work_order_id:
+                work_order_id = "N/A"
+
+            currency = history.get("maintenance_cost_currency")
+            cost = history.get("maintenance_cost")
+
+            if cost is None:
+                cost_display = "Not recorded"
+            else:
+                cost_display = str(cost)
+
+            if currency is None:
+                currency_display = "N/A"
+            else:
+                currency_display = currency
+
+            table.insert(
+                "",
+                tk.END,
+                values=(
+                    history["id"],
+                    work_order_id,
+                    history["equipment_id"],
+                    history["maintenance_date"],
+                    history.get("fault_description", ""),
+                    history.get("work_performed", ""),
+                    history.get("parts_replaced", ""),
+                    currency_display,
+                    cost_display
+                ),
+                tags=(row_tag,)
+            )
+
+    def refresh_history():
+        display_history(load_history())
+
+    refresh_history()
+
+    # Checking whether the equipment ID exists in the saved equipment records
+    def equipment_exists(equipment_id):
+        with open("equipment_data.json", "r") as file:
+            equipment_records = json.load(file)
+
+        for equipment in equipment_records:
+            if equipment["id"].casefold() == equipment_id.casefold():
+                return True
+
+        return False
+
+    # Allowing the same six date formats as main.py
+    def validate_date(date_text):
+        date_formats = (
+            "%Y-%m-%d",
+            "%d-%m-%Y",
+            "%m-%d-%Y",
+            "%Y/%m/%d",
+            "%d/%m/%Y",
+            "%m/%d/%Y"
+        )
+
+        for date_format in date_formats:
+            try:
+                date = datetime.strptime(date_text, date_format)
+                return date.strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+
+        return None
+
+    # Checking that the maintenance cost is a valid, finite and non-negative number
+    def validate_cost(cost_text):
+        try:
+            cost = float(cost_text)
+
+            if cost < 0 or not (-float("inf") < cost < float("inf")):
+                raise ValueError
+
+            return cost
+
+        except ValueError:
+            messagebox.showwarning(
+                "Invalid Cost",
+                "Maintenance cost must be a valid non-negative number.",
+                parent=history_window
+            )
+            return None
+
+    # Creating a space for the action buttons and maintenance history forms
+    button_frame = tk.Frame(history_window)
+    button_frame.pack(pady=10)
+
+    form_container = tk.Frame(history_window)
+    form_container.pack(fill=tk.X, padx=15, pady=5)
+
+    search_frame = tk.Frame(form_container)
+    update_frame = tk.Frame(form_container)
+    delete_frame = tk.Frame(form_container)
+
+    active_form = None
+
+    def show_form(frame):
+        nonlocal active_form
+
+        if active_form is not None:
+            active_form.pack_forget()
+
+        if active_form == frame:
+            active_form = None
+        else:
+            frame.pack(pady=10)
+            active_form = frame
+
+    def show_search_form():
+        refresh_history()
+        show_form(search_frame)
+
+    def show_update_form():
+        refresh_history()
+        show_form(update_frame)
+
+    def show_delete_form():
+        refresh_history()
+        show_form(delete_frame)
+
+    actions = (
+        ("Search History", show_search_form),
+        ("Update History", show_update_form),
+        ("Delete History", show_delete_form)
+    )
+
+    for label, action in actions:
+        tk.Button(
+            button_frame,
+            text=label,
+            command=action,
+            width=19,
+            font=("Arial", 10)
+        ).pack(side=tk.LEFT, padx=5)
+
+    # Creating reusable input fields with their labels
+    def add_field(frame, label, row):
+        tk.Label(
+            frame,
+            text=label
+        ).grid(row=row, column=0, padx=10, pady=5, sticky="e")
+
+        entry = tk.Entry(frame, width=40)
+        entry.grid(row=row, column=1, padx=10, pady=5)
+
+        return entry
+
+    # Providing a dropdown for selecting GBP, USD or NGN
+    def add_currency_field(frame, row):
+        tk.Label(
+            frame,
+            text="Maintenance Cost Currency"
+        ).grid(row=row, column=0, padx=10, pady=5, sticky="e")
+
+        currency = ttk.Combobox(
+            frame,
+            values=("GBP", "USD", "NGN"),
+            state="readonly",
+            width=37
+        )
+
+        currency.grid(row=row, column=1, padx=10, pady=5)
+        return currency
+
+    # ---------------- SEARCH MAINTENANCE HISTORY ----------------
+
+    search_entry = add_field(search_frame, "History ID", 0)
+
+    def search_history_gui():
+        history_id = search_entry.get().strip()
+
+        if history_id == "":
+            messagebox.showwarning(
+                "Missing Information",
+                "Enter a maintenance history ID.",
+                parent=history_window
+            )
+            return
+
+        records = load_history()
+
+        for history in records:
+            if history["id"].casefold() == history_id.casefold():
+                display_history([history])
+                return
+
+        messagebox.showwarning(
+            "Not Found",
+            "Maintenance history not found. Check the history ID.",
+            parent=history_window
+        )
+
+    tk.Button(
+        search_frame,
+        text="Search",
+        command=search_history_gui
+    ).grid(row=1, column=1, pady=10)
+
+    # Clearing the search field and displaying all maintenance history records again
+    def cancel_history_search():
+        search_entry.delete(0, tk.END)
+        refresh_history()
+        show_form(search_frame)
+
+    tk.Button(
+        search_frame,
+        text="Cancel",
+        command=cancel_history_search
+    ).grid(row=1, column=2, padx=10, pady=10)
+
+    # ---------------- UPDATE MAINTENANCE HISTORY ----------------
+
+    update_id = add_field(update_frame, "History ID", 0)
+    update_date = add_field(update_frame, "Maintenance Date", 1)
+    update_fault = add_field(update_frame, "Fault Description", 2)
+    update_work = add_field(update_frame, "Work Performed", 3)
+    update_parts = add_field(update_frame, "Parts Replaced", 4)
+    update_currency = add_currency_field(update_frame, 5)
+    update_cost = add_field(update_frame, "Maintenance Cost", 6)
+
+    selected_history_id = None
+
+    def clear_update_form():
+        for entry in (
+            update_id,
+            update_date,
+            update_fault,
+            update_work,
+            update_parts,
+            update_cost
+        ):
+            entry.delete(0, tk.END)
+
+        update_currency.set("")
+
+    def find_history_to_update():
+        nonlocal selected_history_id
+
+        selected_history_id = None
+        history_id = update_id.get().strip()
+
+        if history_id == "":
+            messagebox.showwarning(
+                "Missing Information",
+                "Enter a maintenance history ID.",
+                parent=history_window
+            )
+            return
+
+        records = load_history()
+
+        for history in records:
+            if history["id"].casefold() == history_id.casefold():
+                selected_history_id = history["id"]
+
+                # Filling the update form with the previously saved maintenance history details
+                fields = (
+                    (update_date, history["maintenance_date"]),
+                    (update_fault, history.get("fault_description", "")),
+                    (update_work, history.get("work_performed", "")),
+                    (update_parts, history.get("parts_replaced", ""))
+                )
+
+                for entry, value in fields:
+                    entry.delete(0, tk.END)
+                    entry.insert(0, value or "")
+
+                currency = history.get("maintenance_cost_currency")
+                update_currency.set(currency or "")
+
+                cost = history.get("maintenance_cost")
+                update_cost.delete(0, tk.END)
+
+                if cost is not None:
+                    update_cost.insert(0, str(cost))
+
+                display_history([history])
+                return
+
+        messagebox.showwarning(
+            "Not Found",
+            "Maintenance history not found.",
+            parent=history_window
+        )
+
+    def save_history_update():
+        nonlocal selected_history_id
+
+        if selected_history_id is None:
+            messagebox.showwarning(
+                "Missing Information",
+                "Find a maintenance history record first.",
+                parent=history_window
+            )
+            return
+
+        date_text = update_date.get().strip()
+        fault_description = update_fault.get().strip()
+        work_performed = update_work.get().strip()
+        parts_replaced = update_parts.get().strip()
+        currency = update_currency.get().strip()
+        cost_text = update_cost.get().strip()
+
+        maintenance_date = validate_date(date_text)
+
+        if maintenance_date is None:
+            messagebox.showwarning(
+                "Invalid Date",
+                "Enter a valid maintenance date.",
+                parent=history_window
+            )
+            return
+
+        # Checking the existing maintenance history before updating its details
+        # Allowing automatically created records to contain incomplete details
+        records = load_history()
+        selected_history = None
+
+        for history in records:
+            if history["id"].casefold() == selected_history_id.casefold():
+                selected_history = history
+                break
+
+        if selected_history is None:
+            messagebox.showwarning(
+                "Not Found",
+                "This maintenance history record no longer exists.",
+                parent=history_window
+            )
+            selected_history_id = None
+            return
+
+        # Preventing an existing work description from being replaced with an empty value
+        original_work = selected_history.get("work_performed", "")
+
+        if work_performed == "" and original_work:
+            messagebox.showwarning(
+                "Missing Information",
+                "Work description cannot be empty.",
+                parent=history_window
+            )
+            return
+
+        # Allowing maintenance costs to remain unrecorded until they are available
+        if cost_text == "":
+            if selected_history.get("maintenance_cost") is None:
+                maintenance_cost = None
+            else:
+                messagebox.showwarning(
+                    "Invalid Cost",
+                    "Enter a valid maintenance cost.",
+                    parent=history_window
+                )
+                return
+        else:
+            if currency not in ("GBP", "USD", "NGN"):
+                messagebox.showwarning(
+                    "Invalid Currency",
+                    "Select a maintenance cost currency first.",
+                    parent=history_window
+                )
+                return
+
+            maintenance_cost = validate_cost(cost_text)
+
+            if maintenance_cost is None:
+                return
+
+        if currency and currency not in ("GBP", "USD", "NGN"):
+            messagebox.showwarning(
+                "Invalid Currency",
+                "Select GBP, USD or NGN.",
+                parent=history_window
+            )
+            return
+
+        # Saving all updated maintenance history details together
+        selected_history["maintenance_date"] = maintenance_date
+        selected_history["fault_description"] = fault_description
+        selected_history["work_performed"] = work_performed
+        selected_history["parts_replaced"] = parts_replaced
+        selected_history["maintenance_cost_currency"] = currency or None
+        selected_history["maintenance_cost"] = maintenance_cost
+
+        save_history(records)
+        refresh_history()
+
+        selected_history_id = None
+        clear_update_form()
+
+        messagebox.showinfo(
+            "Success",
+            "Maintenance history updated successfully!",
+            parent=history_window
+        )
+
+    def cancel_history_update():
+        nonlocal selected_history_id
+
+        # Clearing the entered changes without saving them
+        selected_history_id = None
+        clear_update_form()
+
+        # Displaying all maintenance history records again and closing the update form
+        refresh_history()
+        show_form(update_frame)
+
+        messagebox.showinfo(
+            "Update Canceled",
+            "Update canceled. No changes were saved.",
+            parent=history_window
+        )
+
+    tk.Button(
+        update_frame,
+        text="Find History",
+        command=find_history_to_update
+    ).grid(row=0, column=2, padx=10)
+
+    tk.Button(
+        update_frame,
+        text="Save Changes",
+        command=save_history_update
+    ).grid(row=7, column=1, pady=12)
+
+    tk.Button(
+        update_frame,
+        text="Cancel",
+        command=cancel_history_update
+    ).grid(row=7, column=2, padx=10, pady=12)
+
+    # ---------------- DELETE MAINTENANCE HISTORY ----------------
+
+    delete_id = add_field(delete_frame, "History ID", 0)
+
+    def delete_history_gui():
+        history_id = delete_id.get().strip()
+
+        if history_id == "":
+            messagebox.showwarning(
+                "Missing Information",
+                "Enter a maintenance history ID.",
+                parent=history_window
+            )
+            return
+
+        records = load_history()
+        selected_history = None
+
+        for history in records:
+            if history["id"].casefold() == history_id.casefold():
+                selected_history = history
+                break
+
+        if selected_history is None:
+            messagebox.showwarning(
+                "Not Found",
+                "Maintenance history not found.",
+                parent=history_window
+            )
+            return
+
+        # Preventing deletion of maintenance history linked to completed work orders
+        work_order_id = selected_history.get("work_order_id")
+
+        if work_order_id and str(work_order_id).lower() != "null":
+            with open("work_orders.json", "r") as file:
+                work_orders = json.load(file)
+
+            for work_order in work_orders:
+                if work_order["id"].casefold() == work_order_id.casefold():
+                    if work_order["status"].casefold() == "completed":
+                        messagebox.showwarning(
+                            "Deletion Not Allowed",
+                            "This maintenance history cannot be deleted "
+                            "because it is linked to a completed work order.",
+                            parent=history_window
+                        )
+                        return
+
+        # Asking the user to confirm before deleting the maintenance history record
+        confirmation = messagebox.askyesno(
+            "Confirm Deletion",
+            f"Are you sure you want to delete {selected_history['id']}?",
+            parent=history_window
+        )
+
+        if not confirmation:
+            return
+
+        records.remove(selected_history)
+        save_history(records)
+        refresh_history()
+
+        delete_id.delete(0, tk.END)
+
+        messagebox.showinfo(
+            "Success",
+            "Maintenance history deleted successfully!",
+            parent=history_window
+        )
+
+    tk.Button(
+        delete_frame,
+        text="Delete History",
+        command=delete_history_gui
+    ).grid(row=1, column=1, pady=10)
+
+    # Canceling the deletion without removing the maintenance history record
+    def cancel_history_deletion():
+        delete_id.delete(0, tk.END)
+
+        # Displaying all maintenance history records again and closing the deletion form
+        refresh_history()
+        show_form(delete_frame)
+
+        messagebox.showinfo(
+            "Deletion Canceled",
+            "Deletion canceled. No record was deleted.",
+            parent=history_window
+        )
+
+    tk.Button(
+        delete_frame,
+        text="Cancel",
+        command=cancel_history_deletion
+    ).grid(row=1, column=2, padx=10, pady=10)
+
+# Displaying the application name at the top of the main window
 heading = tk.Label(
     root,
     text="Mechanical Maintenance Management System",
@@ -1855,7 +2708,7 @@ heading = tk.Label(
 )
 heading.pack(pady=20)
 
-# Provide navigation buttons for the four main sections
+# Creating navigation buttons for accessing the four main sections of the application
 equipment_button = tk.Button(
     root,
     text="Equipment Management",
@@ -1888,5 +2741,5 @@ history_button = tk.Button(
 )
 history_button.pack(pady=10)
 
-# Keep the GUI running until the window is closed
+# Keeping the application running until the main window is closed
 root.mainloop()
