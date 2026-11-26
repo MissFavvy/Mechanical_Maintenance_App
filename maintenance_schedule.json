@@ -29,11 +29,11 @@
     {
         "id": "MS006",
         "equipment_id": "EQ014",
-        "maintenance_task": "Inspect hydraulic pump seals",
+        "maintenance_task": "Inspect pump bearings and lubrication system",
         "last_maintenance_date": "2026-11-19",
-        "maintenance_interval": 3,
-        "interval_unit": "Months",
-        "next_maintenance_date": "2027-02-19"
+        "maintenance_interval": 30,
+        "interval_unit": "Days",
+        "next_maintenance_date": "2026-12-19"
     },
     {
         "id": "MS007",
@@ -43,5 +43,41 @@
         "maintenance_interval": 3,
         "interval_unit": "Months",
         "next_maintenance_date": "2027-02-20"
+    },
+    {
+        "id": "MS008",
+        "equipment_id": "EQ009",
+        "maintenance_task": "Lubrication of pump bearings",
+        "last_maintenance_date": "2026-11-15",
+        "maintenance_interval": 1,
+        "interval_unit": "Months",
+        "next_maintenance_date": "2026-12-15"
+    },
+    {
+        "id": "MS009",
+        "equipment_id": "EQ017",
+        "maintenance_task": "Inspect pump bearings",
+        "last_maintenance_date": "2026-11-24",
+        "maintenance_interval": 3,
+        "interval_unit": "Months",
+        "next_maintenance_date": "2027-02-24"
+    },
+    {
+        "id": "MS010",
+        "equipment_id": "EQ013",
+        "maintenance_task": "Inspect generator battery and charging system",
+        "last_maintenance_date": "2026-10-20",
+        "maintenance_interval": 30,
+        "interval_unit": "Days",
+        "next_maintenance_date": "2026-11-19"
+    },
+    {
+        "id": "MS011",
+        "equipment_id": "EQ015",
+        "maintenance_task": "Inspect compressor cooling system and clean ventilation filters",
+        "last_maintenance_date": "2026-10-27",
+        "maintenance_interval": 30,
+        "interval_unit": "Days",
+        "next_maintenance_date": "2026-11-26"
     }
 ]

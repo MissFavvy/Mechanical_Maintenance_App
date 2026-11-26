@@ -1,10 +1,10 @@
 [
     {
         "id": "EQ009",
-        "name": "",
+        "name": "Industrial Water Pump",
         "type": "Pump",
         "location": "Cooling Water Plant",
-        "temperature": 50.0,
+        "temperature": 75.5,
         "vibration": 4.8,
         "operating_hours": 2450.0
     },
@@ -51,6 +51,15 @@
         "location": "Workshop",
         "temperature": 60.0,
         "vibration": 3.2,
-        "operating_hours": 900.0
+        "operating_hours": 750.0
+    },
+    {
+        "id": "EQ017",
+        "name": "Centrifugal Pump",
+        "type": "Pump",
+        "location": "Cooling Water Plant",
+        "temperature": 65.0,
+        "vibration": 3.2,
+        "operating_hours": 1200.0
     }
 ]

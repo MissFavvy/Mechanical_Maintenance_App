@@ -1,27 +1,5 @@
 [
     {
-        "id": "MH001",
-        "work_order_id": "null",
-        "equipment_id": "Eq012",
-        "maintenance_date": "2026-11-19",
-        "work_performed": "",
-        "parts_replaced": "",
-        "maintenance_cost": null,
-        "maintenance_cost_currency": null,
-        "fault_description": "Excessive vibration during operation"
-    },
-    {
-        "id": "MH002",
-        "work_order_id": "null",
-        "equipment_id": "EQ014",
-        "maintenance_date": "2026-11-19",
-        "work_performed": "Inspected hydraulic pump seals",
-        "parts_replaced": "none",
-        "maintenance_cost": 50.0,
-        "maintenance_cost_currency": "GBP",
-        "fault_description": "Hydraulic oil leakage detected around the pump seals, indicating possible seal wear or deterioration"
-    },
-    {
         "id": "MH003",
         "work_order_id": "WO002",
         "equipment_id": "EQ014",
@@ -30,17 +8,50 @@
         "parts_replaced": "Hydraulic seal",
         "fault_description": "Hydraulic oil leakage",
         "maintenance_cost_currency": "GBP",
-        "maintenance_cost": null
+        "maintenance_cost": 85.0
     },
     {
-        "id": "MH004",
-        "work_order_id": null,
-        "equipment_id": "EQ010",
-        "maintenance_date": "2026-11-20",
-        "work_performed": "Inspected and cleaned compressor air filter",
-        "parts_replaced": "none",
-        "fault_description": "Reduced airflow caused by a dirty air filter",
+        "id": "MH005",
+        "work_order_id": "WO001",
+        "equipment_id": "EQ012",
+        "maintenance_date": "2026-11-22",
+        "work_performed": "Inspected pump bearings, replaced worn bearings and realigned the pump shaft",
+        "parts_replaced": "Pump bearings",
+        "fault_description": "Excessive vibration detected during operation",
         "maintenance_cost_currency": "GBP",
-        "maintenance_cost": 35.0
+        "maintenance_cost": 250.0
+    },
+    {
+        "id": "MH006",
+        "work_order_id": "WO004",
+        "equipment_id": "EQ010",
+        "maintenance_date": "2026-11-22",
+        "work_performed": "Inspected compressor discharge pipe, replaced damaged gasket and carried out a leak test",
+        "parts_replaced": "Discharge pipe gasket",
+        "fault_description": "Air leakage detected at the compressor discharge pipe connection",
+        "maintenance_cost_currency": "GBP",
+        "maintenance_cost": 120.0
+    },
+    {
+        "id": "MH008",
+        "work_order_id": "WO005",
+        "equipment_id": "EQ017",
+        "maintenance_date": "2026-11-24",
+        "work_performed": "Replaced worn pump bearings",
+        "parts_replaced": "Bearings",
+        "fault_description": "Excessive pump vibration",
+        "maintenance_cost_currency": "GBP",
+        "maintenance_cost": 150.0
+    },
+    {
+        "id": "MH009",
+        "work_order_id": "WO003",
+        "equipment_id": "EQ012",
+        "maintenance_date": "2026-11-24",
+        "work_performed": "Inspected pump shaft alignment, tightened mounting bolts and carried out a vibration test",
+        "parts_replaced": "",
+        "fault_description": "Pump vibration exceeds normal operating range",
+        "maintenance_cost_currency": "GBP",
+        "maintenance_cost": 95.0
     }
 ]

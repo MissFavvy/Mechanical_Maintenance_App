@@ -1,10 +1,10 @@
 [
     {
         "id": "WO001",
-        "fault_description": "Leakage detected around pump mechanical seal",
+        "fault_description": "Excessive vibration detected during operation",
         "equipment_id": "EQ012",
         "priority": "High",
-        "status": "Pending"
+        "status": "Completed"
     },
     {
         "id": "WO002",
@@ -12,5 +12,40 @@
         "equipment_id": "EQ014",
         "priority": "Medium",
         "status": "Completed"
+    },
+    {
+        "id": "WO003",
+        "fault_description": "Pump vibration exceeds normal operating range",
+        "equipment_id": "EQ012",
+        "priority": "Medium",
+        "status": "Completed"
+    },
+    {
+        "id": "WO004",
+        "fault_description": "Air leakage detected at the compressor discharge pipe connection",
+        "equipment_id": "EQ010",
+        "priority": "Medium",
+        "status": "Completed"
+    },
+    {
+        "id": "WO005",
+        "fault_description": "Excessive pump vibration",
+        "equipment_id": "EQ017",
+        "priority": "High",
+        "status": "Completed"
+    },
+    {
+        "id": "WO006",
+        "fault_description": "Diesel generator battery fails to retain charge",
+        "equipment_id": "EQ013",
+        "priority": "High",
+        "status": "Pending"
+    },
+    {
+        "id": "WO007",
+        "fault_description": "Air compressor overheating during operation",
+        "equipment_id": "EQ015",
+        "priority": "Medium",
+        "status": "In Progress"
     }
 ]
