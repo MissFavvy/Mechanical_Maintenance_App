@@ -1,4 +1,5 @@
-#AI PLUGIN WAS USED TO REVIEW THE CODE BLOCKS
+# GenAI Acknowledgement:
+# ChatGPT (OpenAI, https://chatgpt.com/) was used to review the code blocks.
 
 # Importing the libraries needed for JSON storage and maintenance date calculations
 import json
@@ -29,14 +30,12 @@ with open("maintenance_history.json", "r") as file:
 class OperationCancelled(Exception):
     pass
 
-
 # Checking for cancellation before processing the user's input
 def operation_input(prompt):
     value = input(prompt)
     if value.strip().casefold() == "cancel":
         raise OperationCancelled
     return value
-
 
 # Handling canceled operations and returning the user to the main menu
 def cancellable(function):
@@ -48,11 +47,44 @@ def cancellable(function):
             print("Operation canceled. No changes were saved.")
     return run
 
-
 # Displaying the new record for review before saving
 def confirm_save(record):
     print("\nReview the new record:")
-    print(record)
+    print("------------------------------")
+
+    # Displaying the new record with readable labels and missing values as null
+    for key, value in record.items():
+        label = key.replace("_", " ").title()
+        
+        if key == "id":
+            if value.startswith("EQ"):
+                label = "Equipment ID"
+            elif value.startswith("WO"):
+                label = "Work Order ID"
+            elif value.startswith("MS"):
+                label = "Schedule ID"
+        elif key == "equipment_id":
+            label = "Equipment ID"
+
+        if key == "maintenance_interval":
+            unit = record["interval_unit"]
+
+            if value == 1:
+                unit = unit.rstrip("s")
+
+            print(label + ":", value, unit)
+
+        elif key == "interval_unit":
+            continue
+
+        elif value is None or value == "":
+            print(label + ": null")
+
+        else:
+            print(label + ":", value)
+
+    print("------------------------------")
+    print()
     while True:
         print("1. Save")
         print("2. Cancel")
@@ -63,7 +95,6 @@ def confirm_save(record):
             print("Operation canceled. No changes were saved.")
             return False
         print("Invalid choice. Please select 1 or 2.")
-
 
 # Registering new equipment with a generated equipment ID
 @cancellable
@@ -163,6 +194,39 @@ def add_new_equipment():
     with open("id_counters.json", "w") as file:
         json.dump(id_counters, file, indent=4)
 
+# Displaying all saved equipment records
+def view_equipment():
+    # Showing a message when no equipment records exist
+    if not equipment_list:
+        print("No equipment records found.")
+        return
+
+    print("\nEquipment Records:")
+
+    # Displaying the saved details of each equipment record
+    for equipment in equipment_list:
+        print("------------------------------")
+        print("Equipment ID:", equipment["id"])
+        print("Name:", equipment["name"])
+        print("Type:", equipment["type"])
+        print("Location:", equipment["location"])
+
+        # Displaying missing equipment readings as null
+        for label, key in [
+            ("Temperature", "temperature"),
+            ("Vibration", "vibration"),
+            ("Operating Hours", "operating_hours")
+        ]:
+            value = equipment.get(key)
+
+            if value is None:
+                print(label + ": null")
+            else:
+                print(label + ":", value)
+
+    print("------------------------------")
+    print()
+       
 # Searching for equipment by ID regardless of letter case
 @cancellable
 def search_equipment():
@@ -172,7 +236,27 @@ def search_equipment():
     for equipment in equipment_list:
         if equipment["id"].casefold() == search_id.casefold():
             print("Equipment found!")
-            print(equipment)
+            print("------------------------------")
+            print("Equipment ID:", equipment["id"])
+            print("Name:", equipment["name"])
+            print("Type:", equipment["type"])
+            print("Location:", equipment["location"])
+
+            # Displaying missing equipment readings as null
+            for label, key in [
+                ("Temperature", "temperature"),
+                ("Vibration", "vibration"),
+                ("Operating Hours", "operating_hours")
+            ]:
+                value = equipment.get(key)
+
+                if value is None:
+                    print(label + ": null")
+                else:
+                    print(label + ":", value)
+
+            print("------------------------------")
+            print()
             found = True
 
     if found == False:
@@ -186,7 +270,27 @@ def update_equipment_details():
     for equipment in equipment_list:
         if equipment["id"].casefold() == equipment_id.casefold():
             print("Equipment found!")
-            print(equipment)
+            print("------------------------------")
+            print("Equipment ID:", equipment["id"])
+            print("Name:", equipment["name"])
+            print("Type:", equipment["type"])
+            print("Location:", equipment["location"])
+
+            # Displaying missing equipment readings as null
+            for label, key in [
+                ("Temperature", "temperature"),
+                ("Vibration", "vibration"),
+                ("Operating Hours", "operating_hours")
+            ]:
+                value = equipment.get(key)
+
+                if value is None:
+                    print(label + ": null")
+                else:
+                    print(label + ":", value)
+
+            print("------------------------------")
+            print()
 
             # Using a copy to keep the original equipment details unchanged until saving
             updated_equipment = equipment.copy()
@@ -271,7 +375,27 @@ def update_equipment_details():
                     print("Invalid choice. Please select 1 to 8.")
 
                 print("\nCurrent changes:")
-                print(updated_equipment)
+                print("------------------------------")
+                print("Equipment ID:", updated_equipment["id"])
+                print("Name:", updated_equipment["name"])
+                print("Type:", updated_equipment["type"])
+                print("Location:", updated_equipment["location"])
+
+                # Displaying updated readings with missing values shown as null
+                for label, key in [
+                    ("Temperature", "temperature"),
+                    ("Vibration", "vibration"),
+                    ("Operating Hours", "operating_hours")
+                ]:
+                    value = updated_equipment.get(key)
+
+                    if value is None:
+                        print(label + ": null")
+                    else:
+                        print(label + ":", value)
+
+                print("------------------------------")
+                print()
 
             return
 
@@ -287,7 +411,27 @@ def delete_equipment():
         if equipment["id"].casefold() == equipment_id.casefold():
             found = True
             print("Equipment found!")
-            print(equipment)
+            print("------------------------------")
+            print("Equipment ID:", equipment["id"])
+            print("Name:", equipment["name"])
+            print("Type:", equipment["type"])
+            print("Location:", equipment["location"])
+
+            # Displaying missing equipment readings as null
+            for label, key in [
+                ("Temperature", "temperature"),
+                ("Vibration", "vibration"),
+                ("Operating Hours", "operating_hours")
+            ]:
+                value = equipment.get(key)
+
+                if value is None:
+                    print(label + ": null")
+                else:
+                    print(label + ":", value)
+
+            print("------------------------------")
+            print()
 
             # Keeping track of work orders, schedules and history linked to the equipment
             has_work_order = False
@@ -412,6 +556,27 @@ def create_work_order():
     with open("id_counters.json", "w") as file:
         json.dump(id_counters, file, indent=4)
 
+# Displaying all saved work order records
+def view_work_orders():
+    # Showing a message when no work order records exist
+    if not work_order_list:
+        print("No work order records found.")
+        return
+
+    print("\nWork Order Records:")
+
+    # Displaying the saved details of each work order record
+    for work_order in work_order_list:
+        print("------------------------------")
+        print("Work Order ID:", work_order["id"])
+        print("Equipment ID:", work_order["equipment_id"])
+        print("Fault Description:", work_order["fault_description"])
+        print("Priority:", work_order["priority"])
+        print("Status:", work_order["status"])
+
+    print("------------------------------")
+    print()
+
 # Searching for a work order using its ID
 @cancellable
 def search_work_order():
@@ -422,7 +587,14 @@ def search_work_order():
     for work_order in work_order_list:
         if work_order["id"].casefold() == search_id.casefold():
             print("Work order found!")
-            print(work_order)
+            print("------------------------------")
+            print("Work Order ID:", work_order["id"])
+            print("Equipment ID:", work_order["equipment_id"])
+            print("Fault Description:", work_order["fault_description"])
+            print("Priority:", work_order["priority"])
+            print("Status:", work_order["status"])
+            print("------------------------------")
+            print()
             found = True
 
     if found == False:
@@ -478,7 +650,14 @@ def update_work_order():
     for work_order in work_order_list:
         if work_order["id"].casefold() == work_order_id.casefold():
             print("Work order found!")
-            print(work_order)
+            print("------------------------------")
+            print("Work Order ID:", work_order["id"])
+            print("Equipment ID:", work_order["equipment_id"])
+            print("Fault Description:", work_order["fault_description"])
+            print("Priority:", work_order["priority"])
+            print("Status:", work_order["status"])
+            print("------------------------------")
+            print()
 
             # Checking whether the work order already has linked maintenance history
             has_history = any(
@@ -604,7 +783,14 @@ def update_work_order():
                     print("Invalid choice. Please select 1 to 6.")
 
                 print("\nCurrent changes:")
-                print(updated_order)
+                print("------------------------------")
+                print("Work Order ID:", updated_order["id"])
+                print("Equipment ID:", updated_order["equipment_id"])
+                print("Fault Description:", updated_order["fault_description"])
+                print("Priority:", updated_order["priority"])
+                print("Status:", updated_order["status"])
+                print("------------------------------")
+                print()
 
             return
 
@@ -628,7 +814,14 @@ def delete_work_order():
                     print("Cannot delete this work order because it has linked maintenance history.")
                     return
 
-            print(work_order)
+            print("------------------------------")
+            print("Work Order ID:", work_order["id"])
+            print("Equipment ID:", work_order["equipment_id"])
+            print("Fault Description:", work_order["fault_description"])
+            print("Priority:", work_order["priority"])
+            print("Status:", work_order["status"])
+            print("------------------------------")
+            print()
             
             # Asking for confirmation before deleting the work order
             confirmation = operation_input("Are you sure you want to delete this work order? (yes/no): ")
@@ -806,24 +999,36 @@ def create_maintenance_schedule():
     print("Maintenance schedule created successfully!")
     print("Next maintenance date:", next_maintenance_date)
 
-# Displaying all maintenance schedules with their current status
+# Displaying all saved maintenance schedules
 def view_maintenance_schedules():
+    # Showing a message when no maintenance schedules exist
     if not maintenance_schedule_list:
         print("No maintenance schedules found.")
         return
 
-    print("Maintenance Schedules:")
+    print("\nMaintenance Schedule Records:")
+
+    # Displaying the saved details of each maintenance schedule
     for schedule in maintenance_schedule_list:
         print("------------------------------")
         print("Schedule ID:", schedule["id"])
         print("Equipment ID:", schedule["equipment_id"])
         print("Maintenance Task:", schedule["maintenance_task"])
         print("Last Maintenance Date:", schedule["last_maintenance_date"])
-        print("Maintenance Interval:", schedule["maintenance_interval"], schedule["interval_unit"])
+
+        # Displaying singular or plural maintenance interval units
+        interval = schedule["maintenance_interval"]
+        unit = schedule["interval_unit"]
+
+        if interval == 1:
+            unit = unit.rstrip("s")
+
+        print("Maintenance Interval:", interval, unit)
         print("Next Maintenance Date:", schedule["next_maintenance_date"])
         print("Maintenance Status:", check_maintenance_status(schedule["next_maintenance_date"]))
-        print("------------------------------")
 
+    print("------------------------------")
+    print()
 
 # Comparing the next maintenance date with today's date to determine its status
 def check_maintenance_status(next_maintenance_date):
@@ -854,10 +1059,20 @@ def search_maintenance_schedule():
             print("Equipment ID:", schedule["equipment_id"])
             print("Maintenance Task:", schedule["maintenance_task"])
             print("Last Maintenance Date:", schedule["last_maintenance_date"])
-            print("Maintenance Interval:", schedule["maintenance_interval"], schedule["interval_unit"])
+
+            # Displaying singular or plural maintenance interval units
+            interval = schedule["maintenance_interval"]
+            unit = schedule["interval_unit"]
+
+            if interval == 1:
+                unit = unit.rstrip("s")
+
+            print("Maintenance Interval:", interval, unit)
             print("Next Maintenance Date:", schedule["next_maintenance_date"])
             print("Maintenance Status:", check_maintenance_status(schedule["next_maintenance_date"]))
             print("------------------------------")
+            print()
+
             found = True
             break
 
@@ -872,7 +1087,24 @@ def update_maintenance_schedule():
     for schedule in maintenance_schedule_list:
         if schedule["id"].casefold() == schedule_id.casefold():
             print("Maintenance schedule found!")
-            print(schedule)
+            print("------------------------------")
+            print("Schedule ID:", schedule["id"])
+            print("Equipment ID:", schedule["equipment_id"])
+            print("Maintenance Task:", schedule["maintenance_task"])
+            print("Last Maintenance Date:", schedule["last_maintenance_date"])
+
+            # Displaying singular or plural maintenance interval units
+            interval = schedule["maintenance_interval"]
+            unit = schedule["interval_unit"]
+
+            if interval == 1:
+                unit = unit.rstrip("s")
+
+            print("Maintenance Interval:", interval, unit)
+            print("Next Maintenance Date:", schedule["next_maintenance_date"])
+            print("Maintenance Status:", check_maintenance_status(schedule["next_maintenance_date"]))
+            print("------------------------------")
+            print()
 
             # Using a copy to keep the original schedule unchanged until saving
             updated_schedule = schedule.copy()
@@ -1021,8 +1253,22 @@ def update_maintenance_schedule():
                     print("Invalid choice. Please select 1 to 5.")
 
                 print("\nCurrent changes:")
-                print(updated_schedule)
+                print("------------------------------")
+                print("Schedule ID:", updated_schedule["id"])
+                print("Equipment ID:", updated_schedule["equipment_id"])
+                print("Maintenance Task:", updated_schedule["maintenance_task"])
+                print("Last Maintenance Date:", updated_schedule["last_maintenance_date"])
 
+                # Displaying the updated maintenance interval
+                interval = updated_schedule["maintenance_interval"]
+                unit = updated_schedule["interval_unit"]
+
+                if interval == 1:
+                    unit = unit.rstrip("s")
+
+                print("Maintenance Interval:", interval, unit)
+                print("------------------------------")
+                print()
             return
 
     print("Maintenance schedule not found. Please check the schedule ID.")
@@ -1038,10 +1284,24 @@ def delete_maintenance_schedule():
             found = True
 
             print("Maintenance schedule found!")
+            print("------------------------------")
             print("Schedule ID:", schedule["id"])
             print("Equipment ID:", schedule["equipment_id"])
             print("Maintenance Task:", schedule["maintenance_task"])
+            print("Last Maintenance Date:", schedule["last_maintenance_date"])
+
+            # Displaying singular or plural maintenance interval units
+            interval = schedule["maintenance_interval"]
+            unit = schedule["interval_unit"]
+
+            if interval == 1:
+                unit = unit.rstrip("s")
+
+            print("Maintenance Interval:", interval, unit)
             print("Next Maintenance Date:", schedule["next_maintenance_date"])
+            print("Maintenance Status:", check_maintenance_status(schedule["next_maintenance_date"]))
+            print("------------------------------")
+            print()
 
             # Asking for confirmation before removing the schedule from the saved records
             confirmation = operation_input("Are you sure you want to delete this maintenance schedule? (yes/no): ").strip().lower()
@@ -1062,7 +1322,6 @@ def delete_maintenance_schedule():
     if not found:
         print("Maintenance schedule not found. Please check the schedule ID.")
 
-
 # Displaying all saved maintenance history records
 def view_maintenance_history():
     # Showing a message when no maintenance history records exist
@@ -1076,25 +1335,26 @@ def view_maintenance_history():
     for history in maintenance_history_list:
         print("------------------------------")
         print("History ID:", history["id"])
-        print("Work Order ID:", history.get("work_order_id", "N/A"))
+        print("Work Order ID:", history.get("work_order_id") or "null")
         print("Equipment ID:", history["equipment_id"])
         print("Maintenance Date:", history["maintenance_date"])
-        print("Fault Description:", history.get("fault_description", "N/A"))
-        print("Work Performed:", history["work_performed"])
-        print("Parts Replaced:", history["parts_replaced"])
+        print("Fault Description:", history.get("fault_description") or "null")
+        print("Work Performed:", history.get("work_performed") or "null")
+        print("Parts Replaced:", history.get("parts_replaced") or "null")
 
         currency = history.get("maintenance_cost_currency")
         cost = history.get("maintenance_cost")
 
-        # Displaying missing costs as not recorded rather than zero
+        # Displaying missing costs as null rather than zero
         if cost is None:
-            print("Maintenance Cost: Not recorded")
-        elif currency is None:
-            print("Maintenance Cost:", cost, "(currency not recorded)")
+            print("Maintenance Cost: null")
+        elif not currency:
+            print("Maintenance Cost:", cost, "(null)")
         else:
             print("Maintenance Cost:", cost, currency)
 
-        print("------------------------------")
+    print("------------------------------")
+    print()
 
 # Searching for a maintenance history record using its ID
 @cancellable
@@ -1103,7 +1363,28 @@ def search_maintenance_history():
     for history in maintenance_history_list:
         if history["id"].casefold() == history_id.casefold():
             print("Maintenance history found!")
-            print(history)
+            print("------------------------------")
+            print("History ID:", history["id"])
+            print("Work Order ID:", history.get("work_order_id") or "null")
+            print("Equipment ID:", history["equipment_id"])
+            print("Maintenance Date:", history["maintenance_date"])
+            print("Fault Description:", history.get("fault_description") or "null")
+            print("Work Performed:", history.get("work_performed") or "null")
+            print("Parts Replaced:", history.get("parts_replaced") or "null")
+
+            currency = history.get("maintenance_cost_currency")
+            cost = history.get("maintenance_cost")
+
+            # Displaying missing costs as null rather than zero
+            if cost is None:
+                print("Maintenance Cost: null")
+            elif not currency:
+                print("Maintenance Cost:", cost, "(null)")
+            else:
+                print("Maintenance Cost:", cost, currency)
+
+            print("------------------------------")
+            print()
             return
     print("Maintenance history not found. Please check the history ID.")
 
@@ -1116,7 +1397,28 @@ def update_maintenance_history():
     for history in maintenance_history_list:
         if history["id"].casefold() == history_id.casefold():
             print("Maintenance history found!")
-            print(history)
+            print("------------------------------")
+            print("History ID:", history["id"])
+            print("Work Order ID:", history.get("work_order_id") or "null")
+            print("Equipment ID:", history["equipment_id"])
+            print("Maintenance Date:", history["maintenance_date"])
+            print("Fault Description:", history.get("fault_description") or "null")
+            print("Work Performed:", history.get("work_performed") or "null")
+            print("Parts Replaced:", history.get("parts_replaced") or "null")
+
+            currency = history.get("maintenance_cost_currency")
+            cost = history.get("maintenance_cost")
+
+            # Displaying missing costs as null rather than zero
+            if cost is None:
+                print("Maintenance Cost: null")
+            elif not currency:
+                print("Maintenance Cost:", cost, "(null)")
+            else:
+                print("Maintenance Cost:", cost, currency)
+
+            print("------------------------------")
+            print()
 
             # Using a copy to keep the original history record unchanged until saving
             updated_history = history.copy()
@@ -1263,7 +1565,28 @@ def update_maintenance_history():
                     print("Invalid choice. Please select 1 to 8.")
 
                 print("\nCurrent changes:")
-                print(updated_history)
+                print("------------------------------")
+                print("History ID:", updated_history["id"])
+                print("Work Order ID:", updated_history.get("work_order_id") or "null")
+                print("Equipment ID:", updated_history["equipment_id"])
+                print("Maintenance Date:", updated_history["maintenance_date"])
+                print("Fault Description:", updated_history.get("fault_description") or "null")
+                print("Work Performed:", updated_history.get("work_performed") or "null")
+                print("Parts Replaced:", updated_history.get("parts_replaced") or "null")
+
+                currency = updated_history.get("maintenance_cost_currency")
+                cost = updated_history.get("maintenance_cost")
+
+                # Displaying updated costs with missing values shown as null
+                if cost is None:
+                    print("Maintenance Cost: null")
+                elif not currency:
+                    print("Maintenance Cost:", cost, "(null)")
+                else:
+                    print("Maintenance Cost:", cost, currency)
+
+                print("------------------------------")
+                print()
 
             return
 
@@ -1280,7 +1603,28 @@ def delete_maintenance_history():
         if history["id"].casefold() == history_id.casefold():
 
             print("Maintenance history found!")
-            print(history)
+            print("------------------------------")
+            print("History ID:", history["id"])
+            print("Work Order ID:", history.get("work_order_id") or "null")
+            print("Equipment ID:", history["equipment_id"])
+            print("Maintenance Date:", history["maintenance_date"])
+            print("Fault Description:", history.get("fault_description") or "null")
+            print("Work Performed:", history.get("work_performed") or "null")
+            print("Parts Replaced:", history.get("parts_replaced") or "null")
+
+            currency = history.get("maintenance_cost_currency")
+            cost = history.get("maintenance_cost")
+
+            # Displaying missing costs as null rather than zero
+            if cost is None:
+                print("Maintenance Cost: null")
+            elif not currency:
+                print("Maintenance Cost:", cost, "(null)")
+            else:
+                print("Maintenance Cost:", cost, currency)
+
+            print("------------------------------")
+            print()
 
             # Checking the work order ID linked to the history record
             work_order_id = history.get("work_order_id")
@@ -1352,7 +1696,7 @@ def main_menu():
 
         # Running the function that matches the selected menu option
         if choice == "1":
-            print(equipment_list)
+            view_equipment()
         elif choice == "2":
             add_new_equipment()
         elif choice == "3":
@@ -1364,7 +1708,7 @@ def main_menu():
         elif choice == "6":
             create_work_order()
         elif choice == "7":
-            print(work_order_list)
+            view_work_orders()
         elif choice == "8":
             search_work_order()
         elif choice == "9":
